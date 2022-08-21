@@ -7,12 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace GDP.Core.Services.RabbitMQ
 {
     /// <summary>
-    /// Extensões para registo de serviços de consumo de mensagens via RabbitMQ
+    /// Extensions for registering message consumption services via RabbitMQ
     /// </summary>
     public static class RabbitServiceCollectionExtension
     {
         /// <summary>
-        /// Regista o serviço de Publicação de Eventos
+        /// Register the Event Publishing service
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
@@ -25,7 +25,7 @@ namespace GDP.Core.Services.RabbitMQ
         }
 
         /// <summary>
-        /// Regista o serviço de Consumo de Eventos
+        /// Register the Event Consumption service
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
@@ -38,7 +38,7 @@ namespace GDP.Core.Services.RabbitMQ
         }
 
         /// <summary>
-        /// Regista o consumidor de eventos de mensagens via RabbitMQ
+        /// Register the specified message event consumer
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
