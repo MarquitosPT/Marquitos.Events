@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Marquitos.Events.RabbitMQ
+﻿namespace Marquitos.Events.RabbitMQ
 {
     /// <summary>
     /// Notify Event for a specific event T
@@ -41,7 +39,7 @@ namespace Marquitos.Events.RabbitMQ
         /// <summary>
         /// Origin aplication that fired the event
         /// </summary>
-        public string Origin { get; set; } = $"{ Assembly.GetExecutingAssembly().GetName().Name }";
+        public string Origin { get; set; } = "";
 
         /// <summary>
         /// Number of retries that already been made to consume the event

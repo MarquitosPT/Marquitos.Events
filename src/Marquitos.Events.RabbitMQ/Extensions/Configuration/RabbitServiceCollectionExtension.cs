@@ -12,6 +12,19 @@ namespace GDP.Core.Services.RabbitMQ
     public static class RabbitServiceCollectionExtension
     {
         /// <summary>
+        /// Register the Connection to RabbitMQ using EasyNetQ
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitConnection(this IServiceCollection services, string connectionString)
+        {
+            // Register EasyNetQ 
+            services.RegisterEasyNetQ(connectionString);
+
+            return services;
+        }
+
+        /// <summary>
         /// Register the Event Publishing service
         /// </summary>
         /// <param name="services"></param>
@@ -42,7 +55,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// </summary>
         /// <param name="services"></param>
         /// <returns></returns>
-        public static IServiceCollection AddEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
         {
             services.AddScoped<T>();
             services.AddSingleton<IConsumerService, EventConsumerService<T, TMessage>>();

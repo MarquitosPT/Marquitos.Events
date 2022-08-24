@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Marquitos.Events.RabbitMQ.Consumers
+﻿namespace Marquitos.Events.RabbitMQ.Consumers
 {
     /// <summary>
     /// Abstract event consumer
@@ -13,13 +11,10 @@ namespace Marquitos.Events.RabbitMQ.Consumers
         /// </summary>
         public EventConsumer()
         {
-            var topic = $"{typeof(TMessage).FullName ?? typeof(TMessage).Name}";
-            var queue = $"{Assembly.GetExecutingAssembly().GetName().Name}_{typeof(TMessage).FullName}";
-
             Options = new EventConsumerOptions
             {
-                Topic = topic,
-                QueueName = queue,
+                Topic = $"{typeof(TMessage).FullName}",
+                QueueName = "",
                 Durable = true,
                 AutoDelete = false,
                 PrefetchCount = 1

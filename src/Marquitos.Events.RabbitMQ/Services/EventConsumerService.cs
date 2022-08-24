@@ -1,26 +1,28 @@
 ﻿using EasyNetQ;
 using Marquitos.Events.RabbitMQ.Consumers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
     internal class EventConsumerService<T, TMessage> : IEventConsumerService where T : EventConsumer<TMessage> where TMessage : class, IEvent
     {
         private readonly IServiceProvider _serviceProdiver;
+        private readonly IHostEnvironment _hostEnvironment;
         private readonly IBus _bus;
         private readonly ILogger<EventConsumerService<T, TMessage>> _logger;
         private SubscriptionResult subscription;
         private EventConsumerOptions consumerOptions = new();
 
-        public EventConsumerService(IServiceProvider serviceProdiver, IBus bus, ILogger<EventConsumerService<T, TMessage>> logger)
+        public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, ILogger<EventConsumerService<T, TMessage>> logger)
         {
             _serviceProdiver = serviceProdiver;
+            _hostEnvironment = hostEnvironment;
             _bus = bus;
             _logger = logger;
 
-            SubscriptionId = $"{Assembly.GetExecutingAssembly().GetName().Name}";
+            SubscriptionId = _hostEnvironment.ApplicationName;
         }
 
         public string SubscriptionId { get; set; }
@@ -61,6 +63,10 @@ namespace Marquitos.Events.RabbitMQ.Services
             {
                 var consumer = scope.ServiceProvider.GetRequiredService<T>();
 
+                // Setup default values before initialization
+                consumer.Options.Topic = $"{typeof(TMessage).FullName}";
+                consumer.Options.QueueName = $"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}";
+
                 IsEnabled = await consumer.InitializeAsync(cancellationToken);
 
                 if (!IsEnabled)
@@ -83,13 +89,21 @@ namespace Marquitos.Events.RabbitMQ.Services
                         subscription = await _bus.PubSub.SubscribeAsync<NotifyEvent<TMessage>>(SubscriptionId,
                         HandleMessageAsync,
                         (o) => {
-                            if (consumerOptions.Topic != null)
+                            if (consumerOptions.Topic != "")
                             {
                                 o.WithTopic(consumerOptions.Topic);
                             }
-                            if (consumerOptions.QueueName != null)
+                            else
+                            {
+                                o.WithTopic($"{typeof(TMessage).FullName}");
+                            }
+                            if (consumerOptions.QueueName != "")
                             {
                                 o.WithQueueName(consumerOptions.QueueName);
+                            }
+                            else
+                            {
+                                o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}");
                             }
                             o.WithDurable(consumerOptions.Durable);
                             o.WithAutoDelete(consumerOptions.AutoDelete);
