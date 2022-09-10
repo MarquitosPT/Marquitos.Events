@@ -6,13 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
-    internal class EventConsumerService<T, TMessage> : IEventConsumerService where T : EventConsumer<TMessage> where TMessage : class, IEvent
+    internal class EventConsumerService<T, TMessage> : IEventConsumerService, IDisposable where T : EventConsumer<TMessage> where TMessage : class, IEvent
     {
         private readonly IServiceProvider _serviceProdiver;
         private readonly IHostEnvironment _hostEnvironment;
         private readonly IBus _bus;
         private readonly ILogger<EventConsumerService<T, TMessage>> _logger;
         private SubscriptionResult subscription;
+        private SubscriptionResult managementSubscription;
         private EventConsumerOptions consumerOptions = new();
 
         public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, ILogger<EventConsumerService<T, TMessage>> logger)
@@ -30,6 +31,26 @@ namespace Marquitos.Events.RabbitMQ.Services
         public bool IsEnabled { get; protected set; }
 
         public bool IsConsuming { get; protected set; }
+
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
+        {
+            // Register the management subscriber
+            managementSubscription = await _bus.PubSub.SubscribeAsync<ManagementEvent<T>>(
+                SubscriptionId,
+                HandleManagementMessageAsync,
+                (o) =>
+                {
+                    o.WithTopic(typeof(T).FullName);
+                    o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(T).FullName}");
+                    o.WithDurable(true);
+                    o.WithAutoDelete(true);
+                    o.WithPrefetchCount(1);
+                },
+                cancellationToken);
+
+            // Start the consumer
+            await StartAsync();
+        }
 
         public async Task DisableAsync(CancellationToken cancellationToken = default)
         {
@@ -175,5 +196,45 @@ namespace Marquitos.Events.RabbitMQ.Services
             }  
         }
 
+        private async Task HandleManagementMessageAsync(ManagementEvent<T> message, CancellationToken cancellationToken = default)
+        {
+            switch (message.Action)
+            {
+                case Enums.ManagementEventActionType.Enable:
+                    await EnableAsync(cancellationToken);
+                    break;
+
+                case Enums.ManagementEventActionType.Start:
+                    await StartAsync(cancellationToken);
+                    break;
+
+                case Enums.ManagementEventActionType.Stop:
+                    await StopAsync(cancellationToken);
+                    break;
+
+                case Enums.ManagementEventActionType.Disable:
+                    await DisableAsync(cancellationToken);  
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (IsConsuming)
+            {
+                _logger.LogInformation("{EventConsumer} - Stopping consume events.", typeof(T).Name);
+
+                subscription.Dispose();
+
+                IsConsuming = false;
+
+                _logger.LogInformation("{EventConsumer} - Stopped consuming events.", typeof(T).Name);
+            }
+
+            managementSubscription.Dispose();
+        }
     }
 }

@@ -1,10 +1,12 @@
-﻿namespace Marquitos.Events.RabbitMQ.Consumers
+﻿using Marquitos.Events.Consumers;
+
+namespace Marquitos.Events.RabbitMQ.Consumers
 {
     /// <summary>
     /// Abstract event consumer
     /// </summary>
     /// <typeparam name="TMessage"></typeparam>
-    public abstract class EventConsumer<TMessage> where TMessage : class, IEvent
+    public abstract class EventConsumer<TMessage>: IEventConsumer where TMessage : class, IEvent
     {
         /// <summary>
         /// Creates a new instance

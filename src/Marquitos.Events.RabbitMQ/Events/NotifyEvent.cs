@@ -1,4 +1,4 @@
-﻿namespace Marquitos.Events.RabbitMQ
+﻿namespace Marquitos.Events
 {
     /// <summary>
     /// Notify Event for a specific event T

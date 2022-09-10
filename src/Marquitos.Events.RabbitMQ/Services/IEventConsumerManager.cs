@@ -1,4 +1,4 @@
-﻿using Marquitos.Events.RabbitMQ.Consumers;
+﻿using Marquitos.Events.Consumers;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
@@ -6,8 +6,7 @@ namespace Marquitos.Events.RabbitMQ.Services
     /// Interface for managing consumer services
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TMessage"></typeparam>
-    public interface IEventConsumerManager<T, TMessage> where T : EventConsumer<TMessage> where TMessage : class, IEvent
+    public interface IEventConsumerManager<T> where T : class, IEventConsumer
     {
         /// <summary>
         /// Retrives information if the consumer is Enabled

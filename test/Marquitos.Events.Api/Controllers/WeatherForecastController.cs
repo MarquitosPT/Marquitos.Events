@@ -1,6 +1,10 @@
+using Marquitos.Events.Api.Consumers;
 using Marquitos.Events.Api.Events;
+using Marquitos.Events.RabbitMQ.Consumers;
+using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 
 namespace Marquitos.Events.Api.Controllers
 {
@@ -15,11 +19,13 @@ namespace Marquitos.Events.Api.Controllers
 
         private readonly ILogger<WeatherForecastController> _logger;
         private readonly IEventService _eventService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger, IEventService eventService)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, IEventService eventService, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _eventService = eventService;
+            _serviceProvider = serviceProvider;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -44,6 +50,28 @@ namespace Marquitos.Events.Api.Controllers
             await _eventService.NotifyAsync(new WeatherForecastCreated() { WeatherForecast = weatherForecast });
 
             return weatherForecast;
+        }
+
+        [HttpPut("StartWeatherForecast")]
+        public async Task Start()
+        {
+            using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                var manager = scope.ServiceProvider.GetRequiredService<IEventConsumerManager<WeatherForecastCreatedConsumer>>();
+
+                await manager.StartAsync();
+            }
+        }
+
+        [HttpPut("StopWeatherForecast")]
+        public async Task Stop()
+        {
+            using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                var manager = scope.ServiceProvider.GetRequiredService<IEventConsumerManager<WeatherForecastCreatedConsumer>>();
+
+                await manager.StopAsync();
+            }
         }
     }
 }

@@ -59,7 +59,7 @@ namespace GDP.Core.Services.RabbitMQ
         {
             services.AddScoped<T>();
             services.AddSingleton<IConsumerService, EventConsumerService<T, TMessage>>();
-            services.AddSingleton<IEventConsumerManager<T, TMessage>, EventConsumerManager<T, TMessage>>();
+            services.AddSingleton<IEventConsumerManager<T>, EventConsumerManager<T, TMessage>>();
 
             return services;
         }

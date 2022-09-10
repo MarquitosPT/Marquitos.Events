@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
@@ -19,26 +16,26 @@ namespace Marquitos.Events.RabbitMQ.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("{Service} is starting.", nameof(RabbitConsumerService));
+            _logger.LogInformation("{Service} is starting.", nameof(RabbitConsumerService));
 
             foreach (var item in _services)
             {
-                await item.StartAsync(cancellationToken);
+                await item.InitializeAsync(cancellationToken);
             }
 
-            _logger.LogDebug("{Service} has started.", nameof(RabbitConsumerService));
+            _logger.LogInformation("{Service} has started.", nameof(RabbitConsumerService));
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("{Service} is stopping.", nameof(RabbitConsumerService));
+            _logger.LogInformation("{Service} is stopping.", nameof(RabbitConsumerService));
 
             foreach (var item in _services)
             {
                 await item.StopAsync(cancellationToken);
             }
 
-            _logger.LogDebug("{Service} has stopped.", nameof(RabbitConsumerService));
+            _logger.LogInformation("{Service} has stopped.", nameof(RabbitConsumerService));
 
             await Task.Delay(100);
         }
