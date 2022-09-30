@@ -14,7 +14,7 @@ namespace Marquitos.Events.RabbitMQ.Services
         private readonly ILogger<EventConsumerService<T, TMessage>> _logger;
         private SubscriptionResult subscription;
         private SubscriptionResult managementSubscription;
-        private EventConsumerOptions consumerOptions = new();
+        private EventConsumerOptions options;
 
         public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, ILogger<EventConsumerService<T, TMessage>> logger)
         {
@@ -24,6 +24,15 @@ namespace Marquitos.Events.RabbitMQ.Services
             _logger = logger;
 
             SubscriptionId = _hostEnvironment.ApplicationName;
+            options = new EventConsumerOptions
+            {
+                Topic = $"{typeof(TMessage).FullName}",
+                QueueName = $"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}",
+                Durable = true,
+                AutoDelete = false,
+                PrefetchCount = 1
+            };
+
         }
 
         public string SubscriptionId { get; set; }
@@ -41,10 +50,11 @@ namespace Marquitos.Events.RabbitMQ.Services
                 (o) =>
                 {
                     o.WithTopic(typeof(T).FullName);
-                    o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(T).FullName}");
+                    o.WithQueueName($"{typeof(T).FullName}_{Guid.NewGuid()}");
                     o.WithDurable(true);
                     o.WithAutoDelete(true);
                     o.WithPrefetchCount(1);
+                    o.WithSingleActiveConsumer(true);
                 },
                 cancellationToken);
 
@@ -84,11 +94,7 @@ namespace Marquitos.Events.RabbitMQ.Services
             {
                 var consumer = scope.ServiceProvider.GetRequiredService<T>();
 
-                // Setup default values before initialization
-                consumer.Options.Topic = $"{typeof(TMessage).FullName}";
-                consumer.Options.QueueName = $"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}";
-
-                IsEnabled = await consumer.InitializeAsync(cancellationToken);
+                IsEnabled = await consumer.InitializeAsync(options, cancellationToken);
 
                 if (!IsEnabled)
                 {
@@ -105,30 +111,30 @@ namespace Marquitos.Events.RabbitMQ.Services
 
                     try
                     {
-                        consumerOptions = consumer.Options;
-
                         subscription = await _bus.PubSub.SubscribeAsync<NotifyEvent<TMessage>>(SubscriptionId,
                         HandleMessageAsync,
                         (o) => {
-                            if (consumerOptions.Topic != "")
+                            if (options.Topic != "")
                             {
-                                o.WithTopic(consumerOptions.Topic);
+                                o.WithTopic(options.Topic);
                             }
                             else
                             {
                                 o.WithTopic($"{typeof(TMessage).FullName}");
                             }
-                            if (consumerOptions.QueueName != "")
+                            if (options.QueueName != "")
                             {
-                                o.WithQueueName(consumerOptions.QueueName);
+                                o.WithQueueName(options.QueueName);
                             }
                             else
                             {
                                 o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}");
                             }
-                            o.WithDurable(consumerOptions.Durable);
-                            o.WithAutoDelete(consumerOptions.AutoDelete);
-                            o.WithPrefetchCount(consumerOptions.PrefetchCount);
+                            o.WithDurable(options.Durable);
+                            o.WithAutoDelete(options.AutoDelete);
+                            o.WithPrefetchCount(options.PrefetchCount);
+                            o.WithSingleActiveConsumer(options.SingleActiveConsumer);
+                            o.WithPriority(options.Priority);
                         },
                         cancellationToken);
 
@@ -171,10 +177,10 @@ namespace Marquitos.Events.RabbitMQ.Services
                 }
                 catch (Exception e)
                 {
-                    if (consumerOptions.Retries.Any() && (message.Retries < consumerOptions.Retries.Count()))
+                    if (options.Retries.Any() && (message.Retries < options.Retries.Count()))
                     {
                         var index = Math.Max(0, message.Retries);
-                        var delay = TimeSpan.FromMinutes(consumerOptions.Retries[index]);
+                        var delay = TimeSpan.FromMinutes(options.Retries[index]);
 
                         message.Retries += 1;
 
@@ -182,7 +188,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                         await rabbitBus.Scheduler.FuturePublishAsync(message, delay, c => c.WithTopic(message.Key), cancellationToken);
 
                         _logger.LogWarning(e, "{EventConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.", 
-                            typeof(T).Name, message.Retries, consumerOptions.Retries.Count(), delay);
+                            typeof(T).Name, message.Retries, options.Retries.Count(), delay);
                     }
                     else
                     {

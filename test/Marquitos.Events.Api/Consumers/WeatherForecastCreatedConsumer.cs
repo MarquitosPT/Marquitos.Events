@@ -5,12 +5,12 @@ namespace Marquitos.Events.Api.Consumers
 {
     public class WeatherForecastCreatedConsumer : EventConsumer<WeatherForecastCreated>
     {
-        public override async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+        public override async Task<bool> InitializeAsync(EventConsumerOptions options, CancellationToken cancellationToken = default)
         {
             // TODO: Setup initial value options or get it from a database
 
             // For example add two retry options
-            Options.Retries = new[] { 0.5, 1 }; // 30s and 1min
+            options.Retries = new[] { 0.5, 1 }; // 30s and 1min
 
             // Simply return true for this demo
             return await Task.FromResult(true);

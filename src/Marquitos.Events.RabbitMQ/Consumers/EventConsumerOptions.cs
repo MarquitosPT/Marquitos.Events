@@ -31,8 +31,18 @@
         public bool AutoDelete { get; set; }
 
         /// <summary>
+        /// Configure the queue as single active consumer.
+        /// </summary>
+        public bool SingleActiveConsumer { get; set; } = false;
+
+        /// <summary>
         /// The amount of messages to retrive from queue each time
         /// </summary>
         public ushort PrefetchCount { get; set; }
+
+        /// <summary>
+        /// Configures the consumer's priority
+        /// </summary>
+        public int Priority { get; set; } = 0;
     }
 }

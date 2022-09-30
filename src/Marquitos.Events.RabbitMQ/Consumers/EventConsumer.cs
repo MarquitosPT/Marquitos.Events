@@ -9,32 +9,13 @@ namespace Marquitos.Events.RabbitMQ.Consumers
     public abstract class EventConsumer<TMessage>: IEventConsumer where TMessage : class, IEvent
     {
         /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        public EventConsumer()
-        {
-            Options = new EventConsumerOptions
-            {
-                Topic = $"{typeof(TMessage).FullName}",
-                QueueName = "",
-                Durable = true,
-                AutoDelete = false,
-                PrefetchCount = 1
-            };
-        }
-
-        /// <summary>
-        /// Consumer options
-        /// </summary>
-        public EventConsumerOptions Options { get; set; }
-
-        /// <summary>
         /// Initializes the consumer parameters
         /// </summary>
+        /// <param name="options"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns true if the consumer is active.</returns>
         /// <remarks>This method is internaly called. It should dot be called directly.</remarks>
-        public abstract Task<bool> InitializeAsync(CancellationToken cancellationToken = default);
+        public abstract Task<bool> InitializeAsync(EventConsumerOptions options, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Enable the consumer parameter
