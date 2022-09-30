@@ -9,10 +9,9 @@
         /// <summary>
         /// Creates a new instance
         /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public NotifyEvent()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
+            Value = null!;
         }
 
         public NotifyEvent(T value)

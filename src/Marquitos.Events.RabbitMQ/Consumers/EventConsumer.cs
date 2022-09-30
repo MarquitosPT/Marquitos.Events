@@ -18,7 +18,7 @@ namespace Marquitos.Events.RabbitMQ.Consumers
         public abstract Task<bool> InitializeAsync(EventConsumerOptions options, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Enable the consumer parameter
+        /// Enable or disable the consumer.
         /// </summary>
         /// <param name="enabled"></param>
         /// <param name="cancellationToken"></param>
