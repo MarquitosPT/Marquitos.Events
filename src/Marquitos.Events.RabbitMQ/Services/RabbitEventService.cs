@@ -19,14 +19,14 @@ namespace Marquitos.Events.RabbitMQ.Services
         {
             var notifyEvent = new NotifyEvent<T>(eventArgs, _hostEnvironment.ApplicationName);
 
-            await _rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+            await _rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(NotifyEvent<T>.Key), cancellationToken);
         }
 
         public async Task NotifyAsync<T>(T eventArgs, TimeSpan delay, CancellationToken cancellationToken = default) where T : class, IEvent
         {
             var notifyEvent = new NotifyEvent<T>(eventArgs, _hostEnvironment.ApplicationName);
 
-            await _rabbitBus.Scheduler.FuturePublishAsync(notifyEvent, delay, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+            await _rabbitBus.Scheduler.FuturePublishAsync(notifyEvent, delay, c => c.WithTopic(NotifyEvent<T>.Key), cancellationToken);
         }
     }
 }

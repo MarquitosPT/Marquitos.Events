@@ -54,7 +54,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     o.WithDurable(true);
                     o.WithAutoDelete(true);
                     o.WithPrefetchCount(1);
-                    o.WithSingleActiveConsumer(true);
+                    o.WithSingleActiveConsumer(false);
                 },
                 cancellationToken);
 
@@ -185,14 +185,14 @@ namespace Marquitos.Events.RabbitMQ.Services
                         message.Retries += 1;
 
                         var rabbitBus = scope.ServiceProvider.GetRequiredService<IBus>();
-                        await rabbitBus.Scheduler.FuturePublishAsync(message, delay, c => c.WithTopic(message.Key), cancellationToken);
+                        await rabbitBus.Scheduler.FuturePublishAsync(message, delay, c => c.WithTopic(NotifyEvent<TMessage>.Key), cancellationToken);
 
                         _logger.LogWarning(e, "{EventConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.", 
                             typeof(T).Name, message.Retries, options.Retries.Count(), delay);
                     }
                     else
                     {
-                        _logger.LogError(e, "{EventConsumer} - Error consuming the event: {Value}",
+                        _logger.LogError(e, "{EventConsumer} - Error consuming the event: \r{Value}",
                             typeof(T).Name, System.Text.Json.JsonSerializer.Serialize(message.Value));
 
                         throw new Exception($"{typeof(T).Name} - Error consuming the event", e);

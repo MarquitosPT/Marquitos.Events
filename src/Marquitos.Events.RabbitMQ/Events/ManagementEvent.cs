@@ -13,7 +13,7 @@ namespace Marquitos.Events
         /// <summary>
         /// Gets the unique identifier key for this event
         /// </summary>
-        public string Key => $"{typeof(TConsumer).FullName}";
+        public static string Key => $"{typeof(TConsumer).FullName}";
 
     }
 }

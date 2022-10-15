@@ -28,7 +28,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     Action = Enums.ManagementEventActionType.Enable
                 };
 
-                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(ManagementEvent<T>.Key), cancellationToken);
             }
         }
 
@@ -42,7 +42,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     Action = Enums.ManagementEventActionType.Disable
                 };
 
-                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(ManagementEvent<T>.Key), cancellationToken);
             }
         }
 
@@ -56,7 +56,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     Action = Enums.ManagementEventActionType.Start
                 };
 
-                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(ManagementEvent<T>.Key), cancellationToken);
             }
         }
 
@@ -70,7 +70,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     Action = Enums.ManagementEventActionType.Stop
                 };
 
-                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(notifyEvent.Key), cancellationToken);
+                await rabbitBus.PubSub.PublishAsync(notifyEvent, c => c.WithTopic(ManagementEvent<T>.Key), cancellationToken);
             }
         }
     }

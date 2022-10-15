@@ -14,11 +14,20 @@
             Value = null!;
         }
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="value"></param>
         public NotifyEvent(T value)
         {
             Value = value;
         }
 
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="origin"></param>
         public NotifyEvent(T value, string origin)
         {
             Value = value;
@@ -33,7 +42,7 @@
         /// <summary>
         /// Gets the unique identifier key for this event
         /// </summary>
-        public string Key => $"{ typeof(T).FullName }";
+        public static string Key => $"{ typeof(T).FullName }";
 
         /// <summary>
         /// Origin aplication that fired the event
