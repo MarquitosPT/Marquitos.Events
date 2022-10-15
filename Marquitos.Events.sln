@@ -11,7 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marquitos.Events.RabbitMQ",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D47300EA-AECD-4D95-8927-15C1E6B97852}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marquitos.Events.Api", "test\Marquitos.Events.Api\Marquitos.Events.Api.csproj", "{BE6CAD71-36C9-4E63-B283-0BD9ACB339B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marquitos.Events.Api", "test\Marquitos.Events.Api\Marquitos.Events.Api.csproj", "{BE6CAD71-36C9-4E63-B283-0BD9ACB339B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{1F8DF67F-0EFA-4A61-B98A-CD8AA9DE69D1}"
+	ProjectSection(SolutionItems) = preProject
+		tools\MarquitosPT.PublicKey = tools\MarquitosPT.PublicKey
+		tools\MarquitosPT.snk = tools\MarquitosPT.snk
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

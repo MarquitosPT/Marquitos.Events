@@ -6,19 +6,40 @@
 		<Nullable>enable</Nullable>
 		<RootNamespace>Marquitos.Events.RabbitMQ</RootNamespace>
 		<Title>Marquitos Events RabbitMQ Implementation</Title>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\tools\MarquitosPT.snk</AssemblyOriginatorKeyFile>
+		<Authors>Marcos Gomes</Authors>
+		<Company>MarquitosPT</Company>
+		<Copyright>2022 - MarquitosPT</Copyright>
+		<PackageProjectUrl>https://github.com/MarquitosPT/Marquitos.Events</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/MarquitosPT/Marquitos.Events</RepositoryUrl>
+		<PackageTags>events;rabbitmq;easynetq</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="EasyNetQ" Version="7.2.0" />
-	  <PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.2.0" />
-	  <PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.2.0" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Marquitos.Events.Abstractions\Marquitos.Events.Abstractions.csproj" />
+		<PackageReference Include="EasyNetQ" Version="7.2.0" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.2.0" />
+		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.2.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Marquitos.Events.Abstractions\Marquitos.Events.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>
