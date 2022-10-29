@@ -36,7 +36,6 @@ namespace Marquitos.Events.Api
 
             app.UseAuthorization();
 
-
             app.MapControllers();
 
             app.Run();
