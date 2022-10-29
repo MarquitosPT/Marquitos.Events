@@ -14,7 +14,8 @@ namespace GDP.Core.Services.RabbitMQ
         /// <summary>
         /// Register the Connection to RabbitMQ using EasyNetQ
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="connectionString">RabbitMQ connection string.</param>
         /// <returns></returns>
         public static IServiceCollection AddRabbitConnection(this IServiceCollection services, string connectionString)
         {
@@ -27,7 +28,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// <summary>
         /// Register the Event Publishing service
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">This Service Collection</param>
         /// <returns></returns>
         public static IServiceCollection AddRabbitEventService(this IServiceCollection services)
         {
@@ -40,7 +41,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// <summary>
         /// Register the Event Consumption service
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">This Service Collection</param>
         /// <returns></returns>
         public static IServiceCollection AddRabbitConsumerService(this IServiceCollection services)
         {
@@ -53,7 +54,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// <summary>
         /// Register the specified message event consumer
         /// </summary>
-        /// <param name="services"></param>
+        /// <param name="services">This Service Collection</param>
         /// <returns></returns>
         public static IServiceCollection AddRabbitEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
         {
