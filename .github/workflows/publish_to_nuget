@@ -26,6 +26,6 @@ jobs:
     - name: Pack RabbitMQ
       run: dotnet pack src/Marquitos.Events.RabbitMQ --configuration Release /p:Version=${VERSION} --no-buil --output ./Publish
     - name: Publish to Nuget
-      run: dotnet nuget push Publish/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_TOKEN}
+      run: dotnet nuget push Publish/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_TOKEN} --skip-duplicate
       env:
         NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
