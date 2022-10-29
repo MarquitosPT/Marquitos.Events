@@ -7,6 +7,7 @@
 		<RootNamespace>Marquitos.Events</RootNamespace>
 		<Title>Marquitos Events Abstractions</Title>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<IsPackable>true</IsPackable>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
