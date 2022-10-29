@@ -26,7 +26,7 @@ jobs:
     - name: Pack Abstractions
       run: dotnet pack src/Marquitos.Events.Abstractions --configuration Release /p:Version=${VERSION} --no-build --output ./Publish
     - name: Pack RabbitMQ
-      run: dotnet pack src/Marquitos.Events.RabbitMQ --configuration Release /p:Version=${VERSION} --no-buil --output ./Publish
+      run: dotnet pack src/Marquitos.Events.RabbitMQ --configuration Release /p:Version=${VERSION} --no-build --output ./Publish
     - name: Publish to Nuget
       run: dotnet nuget push Publish/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_TOKEN} --skip-duplicate
       env:
