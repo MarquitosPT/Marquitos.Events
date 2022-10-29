@@ -26,11 +26,3 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: Pack
-      run: dotnet pack src/Marquitos.Events.Abstractions --configuration Release --output ./Publish
-    - name: Pack
-      run: dotnet pack src/Marquitos.Events.RabbitMQ --configuration Release --output ./Publish
-    - name: Push
-      run: dotnet nuget push Publish/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_TOKEN}
-      env:
-        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
