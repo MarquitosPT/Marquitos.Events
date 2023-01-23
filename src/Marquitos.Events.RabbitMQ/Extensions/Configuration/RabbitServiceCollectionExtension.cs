@@ -1,10 +1,9 @@
-﻿using Marquitos.Events;
-using Marquitos.Events.RabbitMQ.Consumers;
+﻿using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GDP.Core.Services.RabbitMQ
+namespace Marquitos.Events.RabbitMQ
 {
     /// <summary>
     /// Extensions for registering message consumption services via RabbitMQ
@@ -17,7 +16,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// <param name="services">This Service Collection</param>
         /// <param name="connectionString">RabbitMQ connection string.</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitConnection(this IServiceCollection services, string connectionString)
+        public static IServiceCollection AddRabbitMQConnection(this IServiceCollection services, string connectionString)
         {
             // Register EasyNetQ 
             services.RegisterEasyNetQ(connectionString);
@@ -30,7 +29,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// </summary>
         /// <param name="services">This Service Collection</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitEventService(this IServiceCollection services)
+        public static IServiceCollection AddRabbitMQEventService(this IServiceCollection services)
         {
             // Event Service
             services.AddScoped<IEventService, RabbitEventService>();
@@ -43,7 +42,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// </summary>
         /// <param name="services">This Service Collection</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitConsumerService(this IServiceCollection services)
+        public static IServiceCollection AddRabbitMQConsumerService(this IServiceCollection services)
         {
             // Background Services
             services.AddHostedService<RabbitConsumerService>();
@@ -56,7 +55,7 @@ namespace GDP.Core.Services.RabbitMQ
         /// </summary>
         /// <param name="services">This Service Collection</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitMQEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
         {
             services.AddScoped<T>();
             services.AddSingleton<IConsumerService, EventConsumerService<T, TMessage>>();

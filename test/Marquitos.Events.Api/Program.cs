@@ -1,6 +1,6 @@
-using GDP.Core.Services.RabbitMQ;
 using Marquitos.Events.Api.Consumers;
 using Marquitos.Events.Api.Events;
+using Marquitos.Events.RabbitMQ;
 
 namespace Marquitos.Events.Api
 {
@@ -18,10 +18,10 @@ namespace Marquitos.Events.Api
             builder.Services.AddSwaggerGen();
 
             // Add event system services
-            builder.Services.AddRabbitConnection(builder.Configuration.GetConnectionString("RabbitConnection"));
-            builder.Services.AddRabbitEventService();
-            builder.Services.AddRabbitConsumerService();
-            builder.Services.AddRabbitEventConsumer<WeatherForecastCreatedConsumer, WeatherForecastCreated>();
+            builder.Services.AddRabbitMQConnection(builder.Configuration.GetConnectionString("RabbitConnection"));
+            builder.Services.AddRabbitMQEventService();
+            builder.Services.AddRabbitMQConsumerService();
+            builder.Services.AddRabbitMQEventConsumer<WeatherForecastCreatedConsumer, WeatherForecastCreated>();
 
             var app = builder.Build();
 
