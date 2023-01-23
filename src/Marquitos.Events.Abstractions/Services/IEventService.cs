@@ -1,4 +1,8 @@
-﻿namespace Marquitos.Events.Services
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Marquitos.Events.Services
 {
     /// <summary>
     /// Interface to notify events
