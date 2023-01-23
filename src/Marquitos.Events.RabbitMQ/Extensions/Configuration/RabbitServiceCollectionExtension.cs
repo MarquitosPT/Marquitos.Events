@@ -1,4 +1,5 @@
-﻿using Marquitos.Events.RabbitMQ.Consumers;
+﻿using EasyNetQ;
+using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,10 @@ namespace Marquitos.Events.RabbitMQ
         public static IServiceCollection AddRabbitMQConnection(this IServiceCollection services, string connectionString)
         {
             // Register EasyNetQ 
-            services.RegisterEasyNetQ(connectionString);
+            services.RegisterEasyNetQ(connectionString, o =>
+            {
+                o.EnableSystemTextJson();
+            });
 
             return services;
         }

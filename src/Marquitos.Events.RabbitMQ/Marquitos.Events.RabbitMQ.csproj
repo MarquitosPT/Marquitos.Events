@@ -21,6 +21,7 @@
 		<PackageProjectUrl>https://github.com/MarquitosPT/Marquitos.Events</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/MarquitosPT/Marquitos.Events</RepositoryUrl>
 		<PackageTags>events;rabbitmq;easynetq</PackageTags>
+		<Description>A simple event system in top of RabbitMQ using EasyNetQ for AspNetCore applications.</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -31,12 +32,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="EasyNetQ" Version="7.2.0" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.2.0" />
-		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.2.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+		<PackageReference Include="EasyNetQ" Version="7.3.12" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.3.12" />
+		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.3.12" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

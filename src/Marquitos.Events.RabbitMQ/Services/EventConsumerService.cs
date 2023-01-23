@@ -59,7 +59,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                 cancellationToken);
 
             // Start the consumer
-            await StartAsync();
+            await StartAsync(cancellationToken);
         }
 
         public async Task DisableAsync(CancellationToken cancellationToken = default)
@@ -177,7 +177,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                 }
                 catch (Exception e)
                 {
-                    if (options.Retries.Any() && (message.Retries < options.Retries.Count()))
+                    if (options.Retries.Any() && (message.Retries < options.Retries.Length))
                     {
                         var index = Math.Max(0, message.Retries);
                         var delay = TimeSpan.FromMinutes(options.Retries[index]);
@@ -188,7 +188,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                         await rabbitBus.Scheduler.FuturePublishAsync(message, delay, c => c.WithTopic(NotifyEvent<TMessage>.Key), cancellationToken);
 
                         _logger.LogWarning(e, "{EventConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.", 
-                            typeof(T).Name, message.Retries, options.Retries.Count(), delay);
+                            typeof(T).Name, message.Retries, options.Retries.Length, delay);
                     }
                     else
                     {
