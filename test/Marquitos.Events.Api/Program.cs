@@ -1,6 +1,6 @@
 using Marquitos.Events.Api.Consumers;
 using Marquitos.Events.Api.Events;
-using Marquitos.Events.RabbitMQ;
+using Marquitos.Events.RabbitMQ.Extensions.Configuration;
 
 namespace Marquitos.Events.Api
 {
@@ -21,7 +21,12 @@ namespace Marquitos.Events.Api
             builder.Services.AddRabbitMQConnection(builder.Configuration.GetConnectionString("RabbitConnection"));
             builder.Services.AddRabbitMQEventService();
             builder.Services.AddRabbitMQConsumerService();
-            builder.Services.AddRabbitMQEventConsumer<WeatherForecastCreatedConsumer, WeatherForecastCreated>();
+            builder.Services.AddRabbitMQEventConsumer<WeatherForecastCreatedConsumer, WeatherForecastCreated>((sp, o) =>
+            {
+                // For example add two retry options
+                o.Retries = new[] { 0.5, 1 }; // 30s and 1min
+                o.IsEnabled = true;
+            });
 
             var app = builder.Build();
 

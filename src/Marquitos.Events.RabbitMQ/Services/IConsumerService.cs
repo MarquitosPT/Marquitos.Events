@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Marquitos.Events.RabbitMQ.Services
+﻿namespace Marquitos.Events.RabbitMQ.Services
 {
     internal interface IConsumerService
     {
@@ -12,7 +9,7 @@ namespace Marquitos.Events.RabbitMQ.Services
         Task InitializeAsync(CancellationToken cancellationToken = default);
 
         Task StartAsync(CancellationToken cancellationToken = default);
-        
+
         Task StopAsync(CancellationToken cancellationToken = default);
     }
 }

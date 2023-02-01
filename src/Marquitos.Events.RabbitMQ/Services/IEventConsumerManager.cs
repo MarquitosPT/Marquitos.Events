@@ -19,20 +19,6 @@ namespace Marquitos.Events.RabbitMQ.Services
         bool IsConsuming { get; }
 
         /// <summary>
-        /// Enable and Start consuming messages
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task EnableAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Disable and Stop consuming messages
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task DisableAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>
         /// Start consuming messages
         /// </summary>
         /// <param name="cancellationToken"></param>

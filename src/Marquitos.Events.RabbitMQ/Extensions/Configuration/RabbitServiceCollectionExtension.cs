@@ -3,8 +3,10 @@ using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace Marquitos.Events.RabbitMQ
+namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
 {
     /// <summary>
     /// Extensions for registering message consumption services via RabbitMQ
@@ -58,12 +60,99 @@ namespace Marquitos.Events.RabbitMQ
         /// Register the specified message event consumer
         /// </summary>
         /// <param name="services">This Service Collection</param>
+        /// <param name="configureOptions">Function to asynchronous configure the consumer options.</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitMQEventConsumer<T, TMessage>(this IServiceCollection services) where T : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<IServiceProvider, EventConsumerOptions> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
         {
-            services.AddScoped<T>();
-            services.AddSingleton<IConsumerService, EventConsumerService<T, TMessage>>();
-            services.AddSingleton<IEventConsumerManager<T>, EventConsumerManager<T, TMessage>>();
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
+
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (configureOptions != null)
+                        {
+                            configureOptions.Invoke(sp, st);
+
+                            await Task.CompletedTask;
+                        }
+                    }
+                };
+
+                return result;
+            });
+            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Register the specified message event consumer
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="configureOptions">Function to asynchronous configure the consumer options.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Func<IServiceProvider, EventConsumerOptions, Task> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+        {
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
+
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (configureOptions != null)
+                        {
+                            await configureOptions.Invoke(sp, st);
+                        }
+                    }
+                };
+
+                return result;
+            });
+            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Register the specified message event consumer
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="eventCosumerConfiguration">A class that implements the <see cref="IEventConsumerConfiguration{TConsumer, TMessage}"/> to asynchronous configure the evet consumer options.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, IEventConsumerConfiguration<TConsumer, TMessage> eventCosumerConfiguration) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+        {
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
+
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (eventCosumerConfiguration != null)
+                        {
+                            await eventCosumerConfiguration.ConfigureAsync(sp, st);
+                        }
+                    }
+                };
+
+                return result;
+            });
+            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
 
             return services;
         }

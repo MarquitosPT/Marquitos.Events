@@ -6,11 +6,6 @@
     public class EventConsumerOptions
     {
         /// <summary>
-        /// Topic to listen
-        /// </summary>
-        public string Topic { get; set; } = "";
-
-        /// <summary>
         /// The queue name 
         /// </summary>
         public string QueueName { get; set; } = "";
@@ -23,12 +18,12 @@
         /// <summary>
         /// Indicates if the messages should be persisted on disk
         /// </summary>
-        public bool Durable { get; set; }
+        public bool Durable { get; set; } = true;
 
         /// <summary>
         /// Indicates id the queue should be removed after consumer disconnect
         /// </summary>
-        public bool AutoDelete { get; set; }
+        public bool AutoDelete { get; set; } = false;
 
         /// <summary>
         /// Configure the queue as single active consumer.
@@ -38,11 +33,16 @@
         /// <summary>
         /// The amount of messages to retrive from queue each time
         /// </summary>
-        public ushort PrefetchCount { get; set; }
+        public ushort PrefetchCount { get; set; } = 1;
 
         /// <summary>
         /// Configures the consumer's priority
         /// </summary>
         public int Priority { get; set; } = 0;
+
+        /// <summary>
+        /// Indicates if the consumer is active and should consume messages.
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
     }
 }
