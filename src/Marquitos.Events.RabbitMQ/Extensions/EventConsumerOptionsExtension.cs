@@ -1,4 +1,5 @@
 ﻿using Marquitos.Events.RabbitMQ.Consumers;
+using System;
 
 namespace Marquitos.Events.RabbitMQ.Extensions
 {
@@ -22,7 +23,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions
 
             options.PrefetchCount = sourceOptions.PrefetchCount;
             options.Priority = sourceOptions.Priority;
-            options.QueueName = sourceOptions.QueueName;
+            options.MaxPriority= sourceOptions.MaxPriority;
             options.Retries = sourceOptions.Retries;
             options.SingleActiveConsumer = sourceOptions.SingleActiveConsumer;
             options.AutoDelete = sourceOptions.AutoDelete;

@@ -18,13 +18,20 @@ namespace Marquitos.Events.Api
             builder.Services.AddSwaggerGen();
 
             // Add event system services
-            builder.Services.AddRabbitMQConnection(builder.Configuration.GetConnectionString("RabbitConnection"));
+            builder.Services.AddRabbitMQConnectionWithSystemTextJson(builder.Configuration.GetConnectionString("RabbitConnection"));
             builder.Services.AddRabbitMQEventService();
             builder.Services.AddRabbitMQConsumerService();
             builder.Services.AddRabbitMQEventConsumer<WeatherForecastCreatedConsumer, WeatherForecastCreated>((sp, o) =>
             {
                 // For example add two retry options
                 o.Retries = new[] { 0.5, 1 }; // 30s and 1min
+                o.IsEnabled = true;
+            });
+
+            builder.Services.AddRabbitMQEventConsumer<WeatherForecastUpdatedConsumer, WeatherForecastUpdated>((sp, o) =>
+            {
+                // For example add two retry options
+                o.Retries = new[] { 1d, 2d }; // 1min and 2min
                 o.IsEnabled = true;
             });
 

@@ -1,34 +1,59 @@
 ﻿using EasyNetQ;
+using EasyNetQ.Producer;
+using EasyNetQ.Topology;
 using Marquitos.Events.RabbitMQ.Consumers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
     internal class EventConsumerService<TConsumer, TMessage> : IEventConsumerService, IDisposable where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
     {
         private readonly IServiceProvider _serviceProdiver;
+#if NETCOREAPP2_1
+        private readonly IHostingEnvironment _hostEnvironment;
+#else
         private readonly IHostEnvironment _hostEnvironment;
+#endif
         private readonly IBus _bus;
+        private readonly IConventions _conventions;
         private readonly ILogger<EventConsumerService<TConsumer, TMessage>> _logger;
 
-        private SubscriptionResult subscription;
-        private SubscriptionResult managementSubscription;
+        private IDisposable subscription;
+        private IDisposable managementSubscription;
         private EventConsumerOptions options;
         private string subscriptionId;
 
-        public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
+#if NETCOREAPP2_1 || NETCOREAPP3_1
+        private IQueue consumerQueue;
+#else
+        private Queue consumerQueue;
+#endif
+
+        private const string RetriesHeaderKey = "x-retries";
+
+#if NETCOREAPP2_1
+        public EventConsumerService(IServiceProvider serviceProdiver, IHostingEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
+#else
+        public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
+#endif
         {
             _serviceProdiver = serviceProdiver;
             _hostEnvironment = hostEnvironment;
             _bus = bus;
+            _conventions = conventions;
             _logger = logger;
 
             subscriptionId = _hostEnvironment.ApplicationName;
             options = new EventConsumerOptions
             {
-                QueueName = $"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}",
                 Durable = true,
                 AutoDelete = false,
                 PrefetchCount = 1
@@ -39,7 +64,7 @@ namespace Marquitos.Events.RabbitMQ.Services
 
         public bool IsConsuming { get; protected set; } = false;
 
-        public Func<IServiceProvider, EventConsumerOptions, Task> ConfigureOptions { get; set; } = null!;
+        public Func<IServiceProvider, EventConsumerOptions, Task> ConfigureOptions { get; set; } = null;
 
         public async Task StopAsync(CancellationToken cancellationToken = default)
         {
@@ -95,26 +120,43 @@ namespace Marquitos.Events.RabbitMQ.Services
 
                 try
                 {
-                    subscription = await _bus.PubSub.SubscribeAsync<NotifyEvent<TMessage>>(subscriptionId,
-                    HandleMessageAsync,
-                    (o) =>
+                    // Default EasyNetQ Exchange
+                    var exchangeName = _conventions.ExchangeNamingConvention(typeof(TMessage));
+                    var exchange = await _bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, cancellationToken).ConfigureAwait(false);
+
+                    var queueName = $"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}";
+                    consumerQueue = await _bus.Advanced.QueueDeclareAsync(
+                    queueName, c =>
                     {
-                        o.WithTopic(NotifyEvent<TMessage>.Key);
-                        if (options.QueueName != "")
+                        c.AsDurable(options.Durable);
+                        c.AsAutoDelete(options.AutoDelete);
+
+                        if (options.SingleActiveConsumer)
                         {
-                            o.WithQueueName(options.QueueName);
+                            c.WithSingleActiveConsumer();
                         }
-                        else
+                        
+                        if (options.MaxPriority.HasValue)
                         {
-                            o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(TMessage).FullName}");
+                            c.WithMaxPriority(options.MaxPriority.Value);
                         }
-                        o.WithDurable(options.Durable);
-                        o.WithAutoDelete(options.AutoDelete);
-                        o.WithPrefetchCount(options.PrefetchCount);
-                        o.WithSingleActiveConsumer(options.SingleActiveConsumer);
-                        o.WithPriority(options.Priority);
                     },
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
+
+                    await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
+                    
+                    var consumerCancellation = _bus.Advanced.Consume<TMessage>(
+                    consumerQueue,
+                    HandleMessageAsync, c => 
+                    {
+                        c.WithPrefetchCount(options.PrefetchCount);
+                        c.WithPriority(options.Priority);
+#if NET6_0_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                        c.WithConsumerTag(_conventions.ConsumerTagConvention());
+#endif
+                    });
+
+                    subscription = new SubscriptionResult(exchange, consumerQueue, consumerCancellation);
 
                     IsConsuming = true;
 
@@ -132,24 +174,27 @@ namespace Marquitos.Events.RabbitMQ.Services
         public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
             // Register the management subscriber
-            managementSubscription = await _bus.PubSub.SubscribeAsync<ManagementEvent<TConsumer>>(
+            managementSubscription = await _bus.PubSub.SubscribeAsync<ManagementEvent>(
                 subscriptionId,
                 HandleManagementMessageAsync,
                 (o) =>
                 {
                     o.WithTopic(typeof(TConsumer).FullName);
-                    o.WithQueueName($"{typeof(TConsumer).FullName}_{Guid.NewGuid()}");
-                    o.WithDurable(true);
+                    o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}_Management_{Guid.NewGuid()}");
+                    o.WithDurable(false);
                     o.WithAutoDelete(true);
                     o.WithPrefetchCount(1);
-                    o.WithSingleActiveConsumer(false);
+                    o.AsExclusive();
+#if NETCOREAPP6_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                    o.WithSingleActiveConsumer(true);
+#endif
                 },
                 cancellationToken);
 
             await StartAsync(cancellationToken);
         }
 
-        private async Task HandleMessageAsync(NotifyEvent<TMessage> message, CancellationToken cancellationToken = default)
+        private async Task HandleMessageAsync(IMessage<TMessage> message, MessageReceivedInfo messageReceivedInfo, CancellationToken cancellationToken)
         {
             try
             {
@@ -157,34 +202,82 @@ namespace Marquitos.Events.RabbitMQ.Services
                 {
                     var consumer = scope.ServiceProvider.GetRequiredService<TConsumer>();
 
-                    await consumer.HandleMessageAsync(message.Value, cancellationToken);
+                    await consumer.HandleMessageAsync(message.Body, cancellationToken);
                 }
             }
             catch (Exception e)
             {
-                if (options.Retries.Any() && message.Retries < options.Retries.Length)
+                var retries = 0;
+
+                if (message.Properties.HeadersPresent && message.Properties.Headers.ContainsKey(RetriesHeaderKey))
                 {
-                    var index = Math.Max(0, message.Retries);
+                    retries = Convert.ToInt32(message.Properties.Headers[RetriesHeaderKey]);
+                }
+
+                if (options.Retries.Any() && retries < options.Retries.Length)
+                {
+                    var index = Math.Max(0, retries);
                     var delay = TimeSpan.FromMinutes(options.Retries[index]);
 
-                    message.Retries += 1;
+                    retries += 1;
 
-                    await _bus.Scheduler.FuturePublishAsync(message, delay, c => c.WithTopic(NotifyEvent<TMessage>.Key), cancellationToken);
+                    await RetryAsync(message.Body, delay, messageReceivedInfo.RoutingKey, retries, cancellationToken);
 
                     _logger.LogWarning(e, "{EventConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.",
-                        typeof(TConsumer).Name, message.Retries, options.Retries.Length, delay);
+                        typeof(TConsumer).Name, retries, options.Retries.Length, delay);
                 }
                 else
                 {
                     _logger.LogError(e, "{EventConsumer} - Error consuming the event: \r{Value}",
-                        typeof(TConsumer).Name, System.Text.Json.JsonSerializer.Serialize(message.Value));
+                        typeof(TConsumer).Name,
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                        System.Text.Json.JsonSerializer.Serialize(message.Body)
+#else
+                        Newtonsoft.Json.JsonConvert.SerializeObject(message.Body)
+#endif
+                    );
 
                     throw new Exception($"{typeof(TConsumer).Name} - Error consuming the event", e);
                 }
             }
         }
 
-        private async Task HandleManagementMessageAsync(ManagementEvent<TConsumer> message, CancellationToken cancellationToken = default)
+        private async Task RetryAsync(TMessage message, TimeSpan delay, string topic, int retryAtempt, CancellationToken cancellationToken = default)
+        {
+            // Consumer Exchange
+            var consumerExchangeName = $"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}";
+            var consumerExchange = await _bus.Advanced.ExchangeDeclareAsync(consumerExchangeName, ExchangeType.Topic, true, false, cancellationToken).ConfigureAwait(false);
+
+            var delayString = delay.ToString(@"dd\_hh\_mm\_ss");
+            var futureTopic = $"{topic}_{delayString}";
+            var futureQueueName = $"{consumerExchangeName}_{delayString}";
+            var futureQueue = await _bus.Advanced.QueueDeclareAsync(
+                futureQueueName,
+                c =>
+                {
+                    c.AsDurable(options.Durable);
+                    c.AsAutoDelete(options.AutoDelete);
+                    c.WithMessageTtl(delay);
+                    c.WithDeadLetterExchange(consumerExchange);
+                    c.WithDeadLetterRoutingKey(topic);
+                },
+                cancellationToken
+            ).ConfigureAwait(false);
+
+            await _bus.Advanced.BindAsync(consumerExchange, consumerQueue, topic, cancellationToken).ConfigureAwait(false);
+            await _bus.Advanced.BindAsync(consumerExchange, futureQueue, futureTopic, cancellationToken).ConfigureAwait(false);
+
+            var properties = new MessageProperties
+            {
+                Priority = 0,
+                Headers = new Dictionary<string, object> { { RetriesHeaderKey, retryAtempt } },
+                DeliveryMode = 2,
+            };
+            var advancedMessage = new Message<TMessage>(message, properties);
+            await _bus.Advanced.PublishAsync(consumerExchange, futureTopic, true, advancedMessage, cancellationToken).ConfigureAwait(false);
+        }
+        
+        private async Task HandleManagementMessageAsync(ManagementEvent message, CancellationToken cancellationToken = default)
         {
             switch (message.Action)
             {

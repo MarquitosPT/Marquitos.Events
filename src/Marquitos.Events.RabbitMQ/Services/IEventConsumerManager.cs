@@ -1,4 +1,6 @@
 ﻿using Marquitos.Events.Consumers;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {

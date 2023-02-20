@@ -1,15 +1,12 @@
-﻿namespace Marquitos.Events.RabbitMQ.Consumers
+﻿using System;
+
+namespace Marquitos.Events.RabbitMQ.Consumers
 {
     /// <summary>
     /// Event consumer options
     /// </summary>
     public class EventConsumerOptions
     {
-        /// <summary>
-        /// The queue name 
-        /// </summary>
-        public string QueueName { get; set; } = "";
-
         /// <summary>
         /// Array of delay in minutes of retries atempts that the consumer will try to consume the message before raises a failed exception.
         /// </summary>
@@ -39,6 +36,11 @@
         /// Configures the consumer's priority
         /// </summary>
         public int Priority { get; set; } = 0;
+
+        /// <summary>
+        /// Configures the Queue max priority
+        /// </summary>
+        public int? MaxPriority { get; set; } = null;
 
         /// <summary>
         /// Indicates if the consumer is active and should consume messages.

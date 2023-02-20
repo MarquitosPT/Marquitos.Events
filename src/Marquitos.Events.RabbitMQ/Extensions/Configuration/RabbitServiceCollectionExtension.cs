@@ -1,10 +1,13 @@
 ﻿using EasyNetQ;
+using EasyNetQ.DI;
 using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
 {
@@ -18,8 +21,42 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
         /// </summary>
         /// <param name="services">This Service Collection</param>
         /// <param name="connectionString">RabbitMQ connection string.</param>
+        /// <param name="registerServices">Action to configure EasyNetQ parameters</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitMQConnection(this IServiceCollection services, string connectionString)
+        public static IServiceCollection AddRabbitMQConnection(this IServiceCollection services, string connectionString, Action<IServiceRegister> registerServices)
+        {
+            // Register EasyNetQ 
+            services.RegisterEasyNetQ(connectionString, registerServices);
+
+            return services;
+        }
+
+#if NET6_0_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+
+        /// <summary>
+        /// Register the Connection to RabbitMQ using EasyNetQ with Newtosoft serialization
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="connectionString">RabbitMQ connection string.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQConnectionWithNewtonsoftJson(this IServiceCollection services, string connectionString)
+        {
+            // Register EasyNetQ 
+            services.RegisterEasyNetQ(connectionString, o =>
+            {
+                o.EnableNewtonsoftJson();
+            });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Register the Connection to RabbitMQ using EasyNetQ with Microsoft serialization
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="connectionString">RabbitMQ connection string.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQConnectionWithSystemTextJson(this IServiceCollection services, string connectionString)
         {
             // Register EasyNetQ 
             services.RegisterEasyNetQ(connectionString, o =>
@@ -29,6 +66,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
 
             return services;
         }
+
+#endif
 
         /// <summary>
         /// Register the Event Publishing service
@@ -67,11 +106,16 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
                 var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
 
-                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions,logger)
                 {
                     ConfigureOptions = async (sp, st) =>
                     {
@@ -102,11 +146,16 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
                 var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
 
-                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
                 {
                     ConfigureOptions = async (sp, st) =>
                     {
@@ -135,11 +184,16 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
                 var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
 
-                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, logger)
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
                 {
                     ConfigureOptions = async (sp, st) =>
                     {

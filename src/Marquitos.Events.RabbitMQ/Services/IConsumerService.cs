@@ -1,4 +1,7 @@
-﻿namespace Marquitos.Events.RabbitMQ.Services
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace Marquitos.Events.RabbitMQ.Services
 {
     internal interface IConsumerService
     {
