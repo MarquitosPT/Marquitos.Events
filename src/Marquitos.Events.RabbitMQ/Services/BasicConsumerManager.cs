@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
-    internal class EventConsumerManager<TConsumer, TMessage> : IConsumerManager<TConsumer> where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+    internal class BasicConsumerManager<TConsumer, TMessage> : IConsumerManager<TConsumer> where TConsumer : BasicConsumer<TMessage> where TMessage : class
     {
         private readonly IConsumerService _service;
         private readonly IBus _Bus;
 
-        public EventConsumerManager(IEnumerable<IConsumerService> services, IBus bus)
+        public BasicConsumerManager(IEnumerable<IConsumerService> services, IBus bus)
         {
-            _service = services.First(e => e is EventConsumerService<TConsumer, TMessage>);
+            _service = services.First(e => e is BasicConsumerService<TConsumer, TMessage>);
             _Bus = bus;
         }
 

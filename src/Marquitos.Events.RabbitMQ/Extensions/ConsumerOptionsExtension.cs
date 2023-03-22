@@ -4,9 +4,9 @@ using System;
 namespace Marquitos.Events.RabbitMQ.Extensions
 {
     /// <summary>
-    /// EventConsumerOptions Extension
+    /// ConsumerOptions Extension
     /// </summary>
-    public static class EventConsumerOptionsExtension
+    public static class ConsumerOptionsExtension
     {
         /// <summary>
         /// Update current options from other source options
@@ -14,7 +14,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions
         /// <param name="options">This options</param>
         /// <param name="sourceOptions">Source options</param>
         /// <exception cref="ArgumentNullException">Throws an ArgumentNullException if sourceOptions is null.</exception>
-        public static void UpdateFrom(this EventConsumerOptions options, EventConsumerOptions sourceOptions)
+        public static void UpdateFrom(this ConsumerOptions options, ConsumerOptions sourceOptions)
         {
             if (sourceOptions == null)
             {
@@ -28,6 +28,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions
             options.SingleActiveConsumer = sourceOptions.SingleActiveConsumer;
             options.AutoDelete = sourceOptions.AutoDelete;
             options.Durable = sourceOptions.Durable;
+            options.IsEnabled = sourceOptions.IsEnabled;
         }
     }
 }

@@ -1,20 +1,19 @@
-﻿using EasyNetQ;
-using EasyNetQ.Producer;
-using EasyNetQ.Topology;
-using Marquitos.Events.RabbitMQ.Consumers;
-using Microsoft.Extensions.Configuration;
+﻿using EasyNetQ.Topology;
+using EasyNetQ;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+using Marquitos.Events.RabbitMQ.Consumers;
+using System.Linq;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
-    internal class EventConsumerService<TConsumer, TMessage> : IEventConsumerService, IDisposable where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+    internal class BasicConsumerService<TConsumer, TMessage> : IBasicConsumerService, IDisposable where TConsumer : BasicConsumer<TMessage> where TMessage : class
     {
         private readonly IServiceProvider _serviceProdiver;
 #if NETCOREAPP2_1
@@ -24,12 +23,15 @@ namespace Marquitos.Events.RabbitMQ.Services
 #endif
         private readonly IBus _bus;
         private readonly IConventions _conventions;
-        private readonly ILogger<EventConsumerService<TConsumer, TMessage>> _logger;
+        private readonly ILogger<BasicConsumerService<TConsumer, TMessage>> _logger;
 
         private IDisposable subscription;
         private IDisposable managementSubscription;
         private ConsumerOptions options;
         private string subscriptionId;
+        private string queueName;
+        private string exchangeName;
+        private ICollection<string> topics = new List<string>();
 
 #if NETCOREAPP2_1 || NETCOREAPP3_1
         private IQueue consumerQueue;
@@ -40,9 +42,9 @@ namespace Marquitos.Events.RabbitMQ.Services
         private const string RetriesHeaderKey = "x-retries";
 
 #if NETCOREAPP2_1
-        public EventConsumerService(IServiceProvider serviceProdiver, IHostingEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
+        public BasicConsumerService(IServiceProvider serviceProdiver, IHostingEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<BasicConsumerService<TConsumer, TMessage>> logger)
 #else
-        public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
+        public BasicConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<BasicConsumerService<TConsumer, TMessage>> logger)
 #endif
         {
             _serviceProdiver = serviceProdiver;
@@ -52,6 +54,8 @@ namespace Marquitos.Events.RabbitMQ.Services
             _logger = logger;
 
             subscriptionId = _hostEnvironment.ApplicationName;
+            exchangeName = _conventions.ExchangeNamingConvention(typeof(TMessage));
+            queueName = $"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}";
             options = new ConsumerOptions
             {
                 Durable = true,
@@ -64,19 +68,41 @@ namespace Marquitos.Events.RabbitMQ.Services
 
         public bool IsConsuming { get; protected set; } = false;
 
+        public void SetQueueName(string name)
+        {
+            queueName = name;
+        }
+
+        public void AddTopic(string topic)
+        {
+            if (!string.IsNullOrWhiteSpace(topic))
+            {
+                topics.Add(topic);
+            }
+        }
+
+        public void AddTopics(string[] topics)
+        {
+            if (topics != null)
+            {
+                foreach (string topic in topics) { this.topics.Add(topic); }
+            }
+        }
+
         public Func<IServiceProvider, ConsumerOptions, Task> ConfigureOptions { get; set; } = null;
+
 
         public async Task StopAsync(CancellationToken cancellationToken = default)
         {
             if (IsConsuming)
             {
-                _logger.LogInformation("{EventConsumer} - Stopping consume events.", typeof(TConsumer).Name);
+                _logger.LogInformation("{BasicConsumer} - Stopping consume events.", typeof(TConsumer).Name);
 
                 subscription.Dispose();
 
                 IsConsuming = false;
 
-                _logger.LogInformation("{EventConsumer} - Stopped consuming events.", typeof(TConsumer).Name);
+                _logger.LogInformation("{BasicConsumer} - Stopped consuming events.", typeof(TConsumer).Name);
             }
 
             await Task.CompletedTask;
@@ -86,13 +112,13 @@ namespace Marquitos.Events.RabbitMQ.Services
         {
             if (IsConsuming)
             {
-                _logger.LogInformation("{EventConsumer} - Stopping consume events.", typeof(TConsumer).Name);
+                _logger.LogInformation("{BasicConsumer} - Stopping consume events.", typeof(TConsumer).Name);
 
                 subscription.Dispose();
 
                 IsConsuming = false;
 
-                _logger.LogInformation("{EventConsumer} - Stopped consuming events.", typeof(TConsumer).Name);
+                _logger.LogInformation("{BasicConsumer} - Stopped consuming events.", typeof(TConsumer).Name);
             }
             IsEnabled = false;
 
@@ -116,38 +142,42 @@ namespace Marquitos.Events.RabbitMQ.Services
 
             if (!IsConsuming)
             {
-                _logger.LogInformation("{EventConsumer} - Starting consume events.", typeof(TConsumer).Name);
+                _logger.LogInformation("{BasicConsumer} - Starting consume events.", typeof(TConsumer).Name);
 
                 try
                 {
-                    // Default EasyNetQ Exchange
-                    var exchangeName = _conventions.ExchangeNamingConvention(typeof(TMessage));
-                    var exchange = await _bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, cancellationToken).ConfigureAwait(false);
-
-                    var queueName = $"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}";
                     consumerQueue = await _bus.Advanced.QueueDeclareAsync(
-                    queueName, c =>
+                        queueName, c =>
+                        {
+                            c.AsDurable(options.Durable);
+                            c.AsAutoDelete(options.AutoDelete);
+
+                            if (options.SingleActiveConsumer)
+                            {
+                                c.WithSingleActiveConsumer();
+                            }
+
+                            if (options.MaxPriority.HasValue)
+                            {
+                                c.WithMaxPriority(options.MaxPriority.Value);
+                            }
+                        },
+                        cancellationToken).ConfigureAwait(false);
+
+                    if (topics.Any())
                     {
-                        c.AsDurable(options.Durable);
-                        c.AsAutoDelete(options.AutoDelete);
+                        // Default EasyNetQ Exchange
+                        var exchange = await _bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, true, false, cancellationToken).ConfigureAwait(false);
 
-                        if (options.SingleActiveConsumer)
+                        foreach (var topic in topics)
                         {
-                            c.WithSingleActiveConsumer();
+                            await _bus.Advanced.BindAsync(exchange, consumerQueue, topic, cancellationToken).ConfigureAwait(false);
                         }
-                        
-                        if (options.MaxPriority.HasValue)
-                        {
-                            c.WithMaxPriority(options.MaxPriority.Value);
-                        }
-                    },
-                    cancellationToken).ConfigureAwait(false);
+                    }
 
-                    await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-                    
                     var consumerCancellation = _bus.Advanced.Consume<TMessage>(
                     consumerQueue,
-                    HandleMessageAsync, c => 
+                    HandleMessageAsync, c =>
                     {
                         c.WithPrefetchCount(options.PrefetchCount);
                         c.WithPriority(options.Priority);
@@ -156,15 +186,15 @@ namespace Marquitos.Events.RabbitMQ.Services
 #endif
                     });
 
-                    subscription = new SubscriptionResult(exchange, consumerQueue, consumerCancellation);
+                    subscription = consumerCancellation;
 
                     IsConsuming = true;
 
-                    _logger.LogInformation("{EventConsumer} - Started consuming events.", typeof(TConsumer).Name);
+                    _logger.LogInformation("{BasicConsumer} - Started consuming events.", typeof(TConsumer).Name);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "{EventConsumer} - Error on start consuming events.", typeof(TConsumer).Name);
+                    _logger.LogError(e, "{BasicConsumer} - Error on start consuming events.", typeof(TConsumer).Name);
                 }
             }
 
@@ -223,12 +253,12 @@ namespace Marquitos.Events.RabbitMQ.Services
 
                     await RetryAsync(message.Body, delay, messageReceivedInfo.RoutingKey, retries, cancellationToken);
 
-                    _logger.LogWarning(e, "{EventConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.",
+                    _logger.LogWarning(e, "{BasicConsumer} - Error consuming an event. Will retry {Atempt} of {MaxAtempts} atempts after {Delay}.",
                         typeof(TConsumer).Name, retries, options.Retries.Length, delay);
                 }
                 else
                 {
-                    _logger.LogError(e, "{EventConsumer} - Error consuming the event: \r{Value}",
+                    _logger.LogError(e, "{BasicConsumer} - Error consuming the event: \r{Value}",
                         typeof(TConsumer).Name,
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
                         System.Text.Json.JsonSerializer.Serialize(message.Body)
@@ -276,7 +306,7 @@ namespace Marquitos.Events.RabbitMQ.Services
             var advancedMessage = new Message<TMessage>(message, properties);
             await _bus.Advanced.PublishAsync(consumerExchange, futureTopic, true, advancedMessage, cancellationToken).ConfigureAwait(false);
         }
-        
+
         private async Task HandleManagementMessageAsync(ManagementEvent message, CancellationToken cancellationToken = default)
         {
             switch (message.Action)

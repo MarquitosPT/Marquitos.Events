@@ -57,7 +57,7 @@ namespace Marquitos.Events.Api.Controllers
         {
             using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                var manager = scope.ServiceProvider.GetRequiredService<IEventConsumerManager<WeatherForecastCreatedConsumer>>();
+                var manager = scope.ServiceProvider.GetRequiredService<IConsumerManager<WeatherForecastCreatedConsumer>>();
 
                 await manager.StartAsync();
             }
@@ -68,7 +68,7 @@ namespace Marquitos.Events.Api.Controllers
         {
             using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                var manager = scope.ServiceProvider.GetRequiredService<IEventConsumerManager<WeatherForecastCreatedConsumer>>();
+                var manager = scope.ServiceProvider.GetRequiredService<IConsumerManager<WeatherForecastCreatedConsumer>>();
 
                 await manager.StopAsync();
             }

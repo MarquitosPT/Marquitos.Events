@@ -1,5 +1,6 @@
 ﻿using EasyNetQ;
 using EasyNetQ.DI;
+using Marquitos.Events.RabbitMQ.Builders;
 using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
@@ -101,7 +102,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
         /// <param name="services">This Service Collection</param>
         /// <param name="configureOptions">Function to asynchronous configure the consumer options.</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<IServiceProvider, EventConsumerOptions> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<IServiceProvider, ConsumerOptions> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
         {
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
@@ -130,7 +131,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
 
                 return result;
             });
-            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+            services.AddSingleton<IConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
 
             return services;
         }
@@ -141,7 +142,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
         /// <param name="services">This Service Collection</param>
         /// <param name="configureOptions">Function to asynchronous configure the consumer options.</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Func<IServiceProvider, EventConsumerOptions, Task> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, Func<IServiceProvider, ConsumerOptions, Task> configureOptions) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
         {
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
@@ -168,7 +169,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
 
                 return result;
             });
-            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+            services.AddSingleton<IConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
 
             return services;
         }
@@ -177,9 +178,9 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
         /// Register the specified message event consumer
         /// </summary>
         /// <param name="services">This Service Collection</param>
-        /// <param name="eventCosumerConfiguration">A class that implements the <see cref="IEventConsumerConfiguration{TConsumer, TMessage}"/> to asynchronous configure the evet consumer options.</param>
+        /// <param name="eventConsumerConfiguration">A class that implements the <see cref="IConsumerConfiguration{TConsumer, TMessage}"/> to asynchronous configure the evet consumer options.</param>
         /// <returns></returns>
-        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, IEventConsumerConfiguration<TConsumer, TMessage> eventCosumerConfiguration) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
+        public static IServiceCollection AddRabbitMQEventConsumer<TConsumer, TMessage>(this IServiceCollection services, IConsumerConfiguration<TConsumer, TMessage> eventConsumerConfiguration) where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
         {
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
@@ -197,16 +198,148 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
                 {
                     ConfigureOptions = async (sp, st) =>
                     {
-                        if (eventCosumerConfiguration != null)
+                        if (eventConsumerConfiguration != null)
                         {
-                            await eventCosumerConfiguration.ConfigureAsync(sp, st);
+                            await eventConsumerConfiguration.ConfigureAsync(sp, st);
                         }
                     }
                 };
 
                 return result;
             });
-            services.AddSingleton<IEventConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+            services.AddSingleton<IConsumerManager<TConsumer>, EventConsumerManager<TConsumer, TMessage>>();
+
+            return services;
+        }
+
+
+        /// <summary>
+        /// Register the specified message event consumer
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="configureBuilder">Action to configure the consumer builder.</param>
+        /// <param name="configureOptions">Action to configure the consumer options.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQBasicConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<BasicConsumerServiceBuilder<TConsumer, TMessage>> configureBuilder, Action<IServiceProvider, ConsumerOptions> configureOptions) where TConsumer : BasicConsumer<TMessage> where TMessage : class
+        {
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
+                var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
+
+                var result = new BasicConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (configureOptions != null)
+                        {
+                            configureOptions.Invoke(sp, st);
+
+                            await Task.CompletedTask;
+                        }
+                    }
+                };
+
+                var builder = new BasicConsumerServiceBuilder<TConsumer, TMessage>(result);
+
+                configureBuilder?.Invoke(builder);
+
+                return result;
+            });
+            services.AddSingleton<IConsumerManager<TConsumer>, BasicConsumerManager<TConsumer, TMessage>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Register the specified message event consumer
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="configureBuilder">Action to configure the consumer builder.</param>
+        /// <param name="configureOptions">Function to asynchronous configure the consumer options.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQBasicConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<BasicConsumerServiceBuilder<TConsumer, TMessage>> configureBuilder, Func<IServiceProvider, ConsumerOptions, Task> configureOptions) where TConsumer : BasicConsumer<TMessage> where TMessage : class
+        {
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
+                var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
+
+                var result = new BasicConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (configureOptions != null)
+                        {
+                            await configureOptions.Invoke(sp, st);
+                        }
+                    }
+                };
+
+                var builder = new BasicConsumerServiceBuilder<TConsumer, TMessage>(result);
+
+                configureBuilder?.Invoke(builder);
+
+                return result;
+            });
+            services.AddSingleton<IConsumerManager<TConsumer>, BasicConsumerManager<TConsumer, TMessage>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Register the specified message consumer
+        /// </summary>
+        /// <param name="services">This Service Collection</param>
+        /// <param name="configureBuilder">Action to configure the consumer builder.</param>
+        /// <param name="eventConsumerConfiguration">A class that implements the <see cref="IConsumerConfiguration{TConsumer, TMessage}"/> to asynchronous configure the evet consumer options.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddRabbitMQBasicConsumer<TConsumer, TMessage>(this IServiceCollection services, Action<BasicConsumerServiceBuilder<TConsumer, TMessage>> configureBuilder, IConsumerConfiguration<TConsumer, TMessage> eventConsumerConfiguration) where TConsumer : BasicConsumer<TMessage> where TMessage : class
+        {
+            services.AddScoped<TConsumer>();
+            services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
+            {
+#if NETCOREAPP2_1
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
+#else
+                var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
+#endif
+                var bus = serviceProvider.GetRequiredService<IBus>();
+                var conventions = serviceProvider.GetRequiredService<IConventions>();
+                var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
+
+                var result = new BasicConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
+                {
+                    ConfigureOptions = async (sp, st) =>
+                    {
+                        if (eventConsumerConfiguration != null)
+                        {
+                            await eventConsumerConfiguration.ConfigureAsync(sp, st);
+                        }
+                    }
+                };
+
+                var builder = new BasicConsumerServiceBuilder<TConsumer, TMessage>(result);
+
+                configureBuilder?.Invoke(builder);
+
+                return result;
+            });
+            services.AddSingleton<IConsumerManager<TConsumer>, BasicConsumerManager<TConsumer, TMessage>>();
 
             return services;
         }

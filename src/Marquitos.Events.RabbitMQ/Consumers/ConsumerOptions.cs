@@ -3,9 +3,9 @@
 namespace Marquitos.Events.RabbitMQ.Consumers
 {
     /// <summary>
-    /// Event consumer options
+    /// Consumer options
     /// </summary>
-    public class EventConsumerOptions
+    public class ConsumerOptions
     {
         /// <summary>
         /// Array of delay in minutes of retries atempts that the consumer will try to consume the message before raises a failed exception.

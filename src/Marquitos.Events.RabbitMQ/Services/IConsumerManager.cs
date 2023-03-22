@@ -8,7 +8,7 @@ namespace Marquitos.Events.RabbitMQ.Services
     /// Interface for managing consumer services
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IEventConsumerManager<T> where T : class, IEventConsumer
+    public interface IConsumerManager<T> where T : class, IBasicConsumer
     {
         /// <summary>
         /// Retrives information if the consumer is Enabled
