@@ -10,7 +10,7 @@ namespace Marquitos.Events.RabbitMQ.Builders
     /// <typeparam name="TMessage"></typeparam>
     public class BasicConsumerServiceBuilder<TConsumer, TMessage> where TConsumer : BasicConsumer<TMessage> where TMessage : class
     {
-        
+
         private BasicConsumerService<TConsumer, TMessage> _consumerService;
 
         internal BasicConsumerServiceBuilder(BasicConsumerService<TConsumer, TMessage> consumerService)

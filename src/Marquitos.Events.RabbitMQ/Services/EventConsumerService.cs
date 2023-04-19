@@ -1,8 +1,7 @@
 ﻿using EasyNetQ;
-using EasyNetQ.Producer;
 using EasyNetQ.Topology;
 using Marquitos.Events.RabbitMQ.Consumers;
-using Microsoft.Extensions.Configuration;
+using Marquitos.Events.RabbitMQ.Converters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -134,8 +133,30 @@ namespace Marquitos.Events.RabbitMQ.Services
                         if (options.SingleActiveConsumer)
                         {
                             c.WithSingleActiveConsumer();
+
+                            /* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
+                            Before:
+                                                    }
+
+                                                    if (options.MaxPriority.HasValue)
+                            After:
+                                                    }
+
+                                                    if (options.MaxPriority.HasValue)
+                            */
+
+                            /* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
+                            Before:
+                                                    }
+
+                                                    if (options.MaxPriority.HasValue)
+                            After:
+                                                    }
+
+                                                    if (options.MaxPriority.HasValue)
+                            */
                         }
-                        
+
                         if (options.MaxPriority.HasValue)
                         {
                             c.WithMaxPriority(options.MaxPriority.Value);
@@ -143,11 +164,33 @@ namespace Marquitos.Events.RabbitMQ.Services
                     },
                     cancellationToken).ConfigureAwait(false);
 
+
+                    /* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
+                    Before:
+                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
+
+                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
+                    After:
+                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
+
+                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
+                    */
+
+                    /* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
+                    Before:
+                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
+
+                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
+                    After:
+                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
+
+                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
+                    */
                     await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-                    
+
                     var consumerCancellation = _bus.Advanced.Consume<TMessage>(
                     consumerQueue,
-                    HandleMessageAsync, c => 
+                    HandleMessageAsync, c =>
                     {
                         c.WithPrefetchCount(options.PrefetchCount);
                         c.WithPriority(options.Priority);
@@ -228,10 +271,22 @@ namespace Marquitos.Events.RabbitMQ.Services
                 }
                 else
                 {
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                    var serializeOptions = new System.Text.Json.JsonSerializerOptions();
+                    serializeOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+#if NET6_0_OR_GREATER
+                    serializeOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                    serializeOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    serializeOptions.Converters.Add(new DateOnlyJsonConverter());
+                    serializeOptions.Converters.Add(new TimeOnlyJsonConverter());
+#endif
+#endif
+
                     _logger.LogError(e, "{EventConsumer} - Error consuming the event: \r{Value}",
                         typeof(TConsumer).Name,
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-                        System.Text.Json.JsonSerializer.Serialize(message.Body)
+
+                        System.Text.Json.JsonSerializer.Serialize(message.Body, serializeOptions)
 #else
                         Newtonsoft.Json.JsonConvert.SerializeObject(message.Body)
 #endif
@@ -276,7 +331,7 @@ namespace Marquitos.Events.RabbitMQ.Services
             var advancedMessage = new Message<TMessage>(message, properties);
             await _bus.Advanced.PublishAsync(consumerExchange, futureTopic, true, advancedMessage, cancellationToken).ConfigureAwait(false);
         }
-        
+
         private async Task HandleManagementMessageAsync(ManagementEvent message, CancellationToken cancellationToken = default)
         {
             switch (message.Action)

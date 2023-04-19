@@ -1,10 +1,8 @@
 using Marquitos.Events.Api.Consumers;
 using Marquitos.Events.Api.Events;
-using Marquitos.Events.RabbitMQ.Consumers;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
 
 namespace Marquitos.Events.Api.Controllers
 {
@@ -45,7 +43,7 @@ namespace Marquitos.Events.Api.Controllers
         {
             // TODO: save the model into a database service,
             // for testing purposes just notify the created event and return the same model.
-            
+
             // Notify weather forecast created
             await _eventService.NotifyAsync(new WeatherForecastCreated() { WeatherForecast = weatherForecast });
 

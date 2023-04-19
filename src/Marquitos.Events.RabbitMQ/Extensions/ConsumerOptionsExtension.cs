@@ -23,7 +23,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions
 
             options.PrefetchCount = sourceOptions.PrefetchCount;
             options.Priority = sourceOptions.Priority;
-            options.MaxPriority= sourceOptions.MaxPriority;
+            options.MaxPriority = sourceOptions.MaxPriority;
             options.Retries = sourceOptions.Retries;
             options.SingleActiveConsumer = sourceOptions.SingleActiveConsumer;
             options.AutoDelete = sourceOptions.AutoDelete;

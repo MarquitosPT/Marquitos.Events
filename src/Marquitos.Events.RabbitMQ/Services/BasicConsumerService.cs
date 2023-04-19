@@ -1,15 +1,63 @@
-﻿using EasyNetQ.Topology;
-using EasyNetQ;
+﻿using EasyNetQ;
+using EasyNetQ.Topology;
+using Marquitos.Events.RabbitMQ.Consumers;
+using Marquitos.Events.RabbitMQ.Converters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
+Before:
 using System.Threading.Tasks;
+After:
+using System.Text;
+*/
+
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
+Before:
+using System.Threading.Tasks;
+After:
+using System.Text;
+*/
+
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netcoreapp2.1)'
+Before:
+using System.Threading.Tasks;
+After:
+using System.Text;
+*/
 using System.Threading;
+using System.Threading
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
+Before:
 using Marquitos.Events.RabbitMQ.Consumers;
 using System.Linq;
+using Marquitos.Events.RabbitMQ.Converters;
+After:
+using System.Threading.Converters;
+*/
+
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
+Before:
+using Marquitos.Events.RabbitMQ.Consumers;
+using System.Linq;
+using Marquitos.Events.RabbitMQ.Converters;
+After:
+using System.Threading.Converters;
+*/
+
+/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netcoreapp2.1)'
+Before:
+using Marquitos.Events.RabbitMQ.Consumers;
+using System.Linq;
+using Marquitos.Events.RabbitMQ.Converters;
+After:
+using System.Threading.Converters;
+*/
+.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
@@ -258,10 +306,22 @@ namespace Marquitos.Events.RabbitMQ.Services
                 }
                 else
                 {
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
+                    var serializeOptions = new System.Text.Json.JsonSerializerOptions();
+                    serializeOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+#if NET6_0_OR_GREATER
+                    serializeOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                    serializeOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    serializeOptions.Converters.Add(new DateOnlyJsonConverter());
+                    serializeOptions.Converters.Add(new TimeOnlyJsonConverter());
+#endif
+#endif
+
                     _logger.LogError(e, "{BasicConsumer} - Error consuming the event: \r{Value}",
                         typeof(TConsumer).Name,
 #if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-                        System.Text.Json.JsonSerializer.Serialize(message.Body)
+
+                        System.Text.Json.JsonSerializer.Serialize(message.Body, serializeOptions)
 #else
                         Newtonsoft.Json.JsonConvert.SerializeObject(message.Body)
 #endif

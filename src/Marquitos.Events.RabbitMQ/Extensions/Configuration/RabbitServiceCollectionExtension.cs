@@ -2,6 +2,7 @@
 using EasyNetQ.DI;
 using Marquitos.Events.RabbitMQ.Builders;
 using Marquitos.Events.RabbitMQ.Consumers;
+using Marquitos.Events.RabbitMQ.Converters;
 using Marquitos.Events.RabbitMQ.Services;
 using Marquitos.Events.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,7 +63,15 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             // Register EasyNetQ 
             services.RegisterEasyNetQ(connectionString, o =>
             {
-                o.EnableSystemTextJson();
+                var serializeOptions = new System.Text.Json.JsonSerializerOptions();
+                serializeOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+#if NET6_0_OR_GREATER
+                serializeOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                serializeOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                serializeOptions.Converters.Add(new DateOnlyJsonConverter());
+                serializeOptions.Converters.Add(new TimeOnlyJsonConverter());
+#endif
+                o.EnableSystemTextJson(serializeOptions);
             });
 
             return services;
@@ -116,7 +125,7 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
 
-                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions,logger)
+                var result = new EventConsumerService<TConsumer, TMessage>(serviceProvider, hostEnvironment, bus, conventions, logger)
                 {
                     ConfigureOptions = async (sp, st) =>
                     {
