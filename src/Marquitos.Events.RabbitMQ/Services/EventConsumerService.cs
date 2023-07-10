@@ -133,28 +133,6 @@ namespace Marquitos.Events.RabbitMQ.Services
                         if (options.SingleActiveConsumer)
                         {
                             c.WithSingleActiveConsumer();
-
-                            /* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
-                            Before:
-                                                    }
-
-                                                    if (options.MaxPriority.HasValue)
-                            After:
-                                                    }
-
-                                                    if (options.MaxPriority.HasValue)
-                            */
-
-                            /* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
-                            Before:
-                                                    }
-
-                                                    if (options.MaxPriority.HasValue)
-                            After:
-                                                    }
-
-                                                    if (options.MaxPriority.HasValue)
-                            */
                         }
 
                         if (options.MaxPriority.HasValue)
@@ -164,28 +142,6 @@ namespace Marquitos.Events.RabbitMQ.Services
                     },
                     cancellationToken).ConfigureAwait(false);
 
-
-                    /* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
-                    Before:
-                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-
-                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
-                    After:
-                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-
-                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
-                    */
-
-                    /* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
-                    Before:
-                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-
-                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
-                    After:
-                                        await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
-
-                                        var consumerCancellation = _bus.Advanced.Consume<TMessage>(
-                    */
                     await _bus.Advanced.BindAsync(exchange, consumerQueue, typeof(TMessage).FullName, cancellationToken).ConfigureAwait(false);
 
                     var consumerCancellation = _bus.Advanced.Consume<TMessage>(

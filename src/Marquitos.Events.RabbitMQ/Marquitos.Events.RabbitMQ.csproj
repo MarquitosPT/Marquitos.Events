@@ -31,10 +31,10 @@
 
 	<!-- Target .NET 6.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<PackageReference Include="EasyNetQ" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.4.3" />
+		<PackageReference Include="EasyNetQ" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.5.3" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />
@@ -58,10 +58,10 @@
 
 	<!--Target .NET Standard 2.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="EasyNetQ" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.4.3" />
-		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.4.3" />
+		<PackageReference Include="EasyNetQ" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.5.3" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />

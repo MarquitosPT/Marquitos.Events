@@ -8,56 +8,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
-Before:
-using System.Threading.Tasks;
-After:
-using System.Text;
-*/
-
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
-Before:
-using System.Threading.Tasks;
-After:
-using System.Text;
-*/
-
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netcoreapp2.1)'
-Before:
-using System.Threading.Tasks;
-After:
-using System.Text;
-*/
 using System.Threading;
-using System.Threading
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (net6.0)'
-Before:
-using Marquitos.Events.RabbitMQ.Consumers;
-using System.Linq;
-using Marquitos.Events.RabbitMQ.Converters;
-After:
-using System.Threading.Converters;
-*/
-
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netstandard2.0)'
-Before:
-using Marquitos.Events.RabbitMQ.Consumers;
-using System.Linq;
-using Marquitos.Events.RabbitMQ.Converters;
-After:
-using System.Threading.Converters;
-*/
-
-/* Unmerged change from project 'Marquitos.Events.RabbitMQ (netcoreapp2.1)'
-Before:
-using Marquitos.Events.RabbitMQ.Consumers;
-using System.Linq;
-using Marquitos.Events.RabbitMQ.Converters;
-After:
-using System.Threading.Converters;
-*/
-.Tasks;
+using System.Threading.Tasks;
 
 namespace Marquitos.Events.RabbitMQ.Services
 {
