@@ -71,8 +71,11 @@ namespace Marquitos.Events.RabbitMQ.Services
             {
                 _logger.LogInformation("{EventConsumer} - Stopping consume events.", typeof(TConsumer).Name);
 
-                subscription.Dispose();
-
+                if (subscription != null)
+                {
+                    subscription.Dispose();
+                }
+                
                 IsConsuming = false;
 
                 _logger.LogInformation("{EventConsumer} - Stopped consuming events.", typeof(TConsumer).Name);
@@ -87,7 +90,10 @@ namespace Marquitos.Events.RabbitMQ.Services
             {
                 _logger.LogInformation("{EventConsumer} - Stopping consume events.", typeof(TConsumer).Name);
 
-                subscription.Dispose();
+                if (subscription != null)
+                {
+                    subscription.Dispose();
+                }
 
                 IsConsuming = false;
 
@@ -95,7 +101,10 @@ namespace Marquitos.Events.RabbitMQ.Services
             }
             IsEnabled = false;
 
-            managementSubscription.Dispose();
+            if (managementSubscription != null)
+            {
+                managementSubscription.Dispose();
+            }
         }
 
         public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -157,7 +166,7 @@ namespace Marquitos.Events.RabbitMQ.Services
 
                     subscription = new SubscriptionResult(exchange, consumerQueue, consumerCancellation);
 
-                    IsConsuming = true;
+                    IsConsuming = (subscription != null);
 
                     _logger.LogInformation("{EventConsumer} - Started consuming events.", typeof(TConsumer).Name);
                 }
@@ -267,7 +276,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                 c =>
                 {
                     c.AsDurable(options.Durable);
-                    c.AsAutoDelete(options.AutoDelete);
+                    c.AsAutoDelete(true);
                     c.WithMessageTtl(delay);
                     c.WithDeadLetterExchange(consumerExchange);
                     c.WithDeadLetterRoutingKey(topic);
