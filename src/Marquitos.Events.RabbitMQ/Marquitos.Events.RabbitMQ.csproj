@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netcoreapp2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<RootNamespace>Marquitos.Events.RabbitMQ</RootNamespace>
 		<Title>Marquitos Events RabbitMQ Implementation</Title>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
@@ -15,7 +15,7 @@
 		<AssemblyOriginatorKeyFile>..\..\tools\MarquitosPT.snk</AssemblyOriginatorKeyFile>
 		<Authors>Marcos Gomes</Authors>
 		<Company>MarquitosPT</Company>
-		<Copyright>2022 - MarquitosPT</Copyright>
+		<Copyright>2024 - MarquitosPT</Copyright>
 		<PackageProjectUrl>https://github.com/MarquitosPT/Marquitos.Events</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/MarquitosPT/Marquitos.Events</RepositoryUrl>
 		<PackageTags>events;rabbitmq;easynetq</PackageTags>
@@ -29,42 +29,28 @@
 		</None>
 	</ItemGroup>
 
+	<!-- Target .NET 8.0 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<PackageReference Include="EasyNetQ" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.8.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
+	</ItemGroup>
+
 	<!-- Target .NET 6.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<PackageReference Include="EasyNetQ" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.5.3" />
+		<PackageReference Include="EasyNetQ" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.8.0" />
+		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.8.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />
-	</ItemGroup>
-
-	<!-- Target .NET Core 3.1 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
-		<PackageReference Include="EasyNetQ" Version="6.5.2" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="6.5.2" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.21" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.21" />
-	</ItemGroup>
-
-	<!--Target .NET Core 2.1 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-		<PackageReference Include="EasyNetQ" Version="6.5.2" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="6.5.2" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.1.1" />
-	</ItemGroup>
-
-	<!--Target .NET Standard 2.0 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="EasyNetQ" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.DI.Microsoft" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.Serialization.NewtonsoftJson" Version="7.5.3" />
-		<PackageReference Include="EasyNetQ.Serialization.SystemTextJson" Version="7.5.3" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.4" />
+		<PackageReference Include="System.Text.Json" Version="6.0.11" />
 	</ItemGroup>
 
 	<ItemGroup>
