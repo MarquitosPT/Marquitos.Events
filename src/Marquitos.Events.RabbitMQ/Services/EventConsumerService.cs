@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,11 +18,8 @@ namespace Marquitos.Events.RabbitMQ.Services
     internal class EventConsumerService<TConsumer, TMessage> : IEventConsumerService, IDisposable where TConsumer : EventConsumer<TMessage> where TMessage : class, IEvent
     {
         private readonly IServiceProvider _serviceProdiver;
-#if NETCOREAPP2_1
-        private readonly IHostingEnvironment _hostEnvironment;
-#else
         private readonly IHostEnvironment _hostEnvironment;
-#endif
+
         private readonly IBus _bus;
         private readonly IConventions _conventions;
         private readonly ILogger<EventConsumerService<TConsumer, TMessage>> _logger;
@@ -29,20 +28,13 @@ namespace Marquitos.Events.RabbitMQ.Services
         private IDisposable managementSubscription;
         private ConsumerOptions options;
         private string subscriptionId;
+        private JsonSerializerOptions serializeOptions;
 
-#if NETCOREAPP2_1 || NETCOREAPP3_1
-        private IQueue consumerQueue;
-#else
         private Queue consumerQueue;
-#endif
 
         private const string RetriesHeaderKey = "x-retries";
 
-#if NETCOREAPP2_1
-        public EventConsumerService(IServiceProvider serviceProdiver, IHostingEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
-#else
         public EventConsumerService(IServiceProvider serviceProdiver, IHostEnvironment hostEnvironment, IBus bus, IConventions conventions, ILogger<EventConsumerService<TConsumer, TMessage>> logger)
-#endif
         {
             _serviceProdiver = serviceProdiver;
             _hostEnvironment = hostEnvironment;
@@ -57,6 +49,19 @@ namespace Marquitos.Events.RabbitMQ.Services
                 AutoDelete = false,
                 PrefetchCount = 1
             };
+
+            serializeOptions = new JsonSerializerOptions()
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                Converters = {
+                    new JsonStringEnumConverter(),
+                    new DateOnlyJsonConverter(),
+                    new TimeOnlyJsonConverter()
+                }
+            };
+
+            _logger.BeginScope("{EventConsumer}", typeof(TConsumer).Name);
         }
 
         public bool IsEnabled { get; protected set; } = false;
@@ -159,9 +164,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                     {
                         c.WithPrefetchCount(options.PrefetchCount);
                         c.WithPriority(options.Priority);
-#if NET6_0_OR_GREATER || NETSTANDARD2_0_OR_GREATER
                         c.WithConsumerTag(_conventions.ConsumerTagConvention());
-#endif
                     });
 
                     subscription = new SubscriptionResult(exchange, consumerQueue, consumerCancellation);
@@ -189,13 +192,10 @@ namespace Marquitos.Events.RabbitMQ.Services
                 {
                     o.WithTopic(typeof(TConsumer).FullName);
                     o.WithQueueName($"{_hostEnvironment.ApplicationName}_{typeof(TConsumer).Name}_Management_{Guid.NewGuid()}");
-                    o.WithDurable(false);
+                    o.WithDurable(true);
                     o.WithAutoDelete(true);
                     o.WithPrefetchCount(1);
-                    o.AsExclusive();
-#if NETCOREAPP6_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-                    o.WithSingleActiveConsumer(true);
-#endif
+                    o.AsExclusive(true);
                 },
                 cancellationToken);
 
@@ -236,25 +236,9 @@ namespace Marquitos.Events.RabbitMQ.Services
                 }
                 else
                 {
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-                    var serializeOptions = new System.Text.Json.JsonSerializerOptions();
-                    serializeOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-#if NET6_0_OR_GREATER
-                    serializeOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-                    serializeOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-                    serializeOptions.Converters.Add(new DateOnlyJsonConverter());
-                    serializeOptions.Converters.Add(new TimeOnlyJsonConverter());
-#endif
-#endif
-
                     _logger.LogError(e, "{EventConsumer} - Error consuming the event: \r{Value}",
                         typeof(TConsumer).Name,
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-
                         System.Text.Json.JsonSerializer.Serialize(message.Body, serializeOptions)
-#else
-                        Newtonsoft.Json.JsonConvert.SerializeObject(message.Body)
-#endif
                     );
 
                     throw new Exception($"{typeof(TConsumer).Name} - Error consuming the event", e);

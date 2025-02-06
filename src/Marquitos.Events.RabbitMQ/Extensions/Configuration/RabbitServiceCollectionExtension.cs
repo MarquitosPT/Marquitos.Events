@@ -33,8 +33,6 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             return services;
         }
 
-#if NET6_0_OR_GREATER || NETSTANDARD2_0_OR_GREATER
-
         /// <summary>
         /// Register the Connection to RabbitMQ using EasyNetQ with Newtosoft serialization
         /// </summary>
@@ -65,19 +63,16 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             {
                 var serializeOptions = new System.Text.Json.JsonSerializerOptions();
                 serializeOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-#if NET6_0_OR_GREATER
                 serializeOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 serializeOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 serializeOptions.Converters.Add(new DateOnlyJsonConverter());
                 serializeOptions.Converters.Add(new TimeOnlyJsonConverter());
-#endif
+
                 o.EnableSystemTextJson(serializeOptions);
             });
 
             return services;
         }
-
-#endif
 
         /// <summary>
         /// Register the Event Publishing service
@@ -116,11 +111,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
@@ -156,11 +148,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
@@ -194,11 +183,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, EventConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<EventConsumerService<TConsumer, TMessage>>>();
@@ -234,11 +220,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
@@ -279,11 +262,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
@@ -322,11 +302,8 @@ namespace Marquitos.Events.RabbitMQ.Extensions.Configuration
             services.AddScoped<TConsumer>();
             services.AddSingleton<IConsumerService, BasicConsumerService<TConsumer, TMessage>>((serviceProvider) =>
             {
-#if NETCOREAPP2_1
-                var hostEnvironment = serviceProvider.GetRequiredService<IHostingEnvironment>();
-#else
                 var hostEnvironment = serviceProvider.GetRequiredService<IHostEnvironment>();
-#endif
+
                 var bus = serviceProvider.GetRequiredService<IBus>();
                 var conventions = serviceProvider.GetRequiredService<IConventions>();
                 var logger = serviceProvider.GetRequiredService<ILogger<BasicConsumerService<TConsumer, TMessage>>>();
