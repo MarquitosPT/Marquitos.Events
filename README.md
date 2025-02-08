@@ -24,7 +24,7 @@ Then register the RabbitMQ Consumer Service Engine and the Event Consumer on you
     // Register the RabbitMQ connections string
     builder.Services.AddRabbitMQConnectionWithSystemTextJson(builder.Configuration.GetConnectionString("RabbitConnection"));
 
-    // Register the Event Service to notify events (Optional) 
+    // Register the Event Service to notify events
     builder.Services.AddRabbitMQEventService();
 
     // Register the Consumer Service Engine
@@ -38,4 +38,35 @@ Then register the RabbitMQ Consumer Service Engine and the Event Consumer on you
         o.IsEnabled = true;
     });
 ...
+```
+
+To notify an event, first create a class that implements the IEvent interface. Then inject IEventService to your service and call NotifyAsync to notify your event.
+``` csharp
+    // Your event class
+    public class ExampleCreated : IEvent
+    {
+        /// <summary>
+        /// The example name just created
+        /// </summary>
+        public string ExampleName { get; set; } = "My Example";
+    }
+
+    // Your Service class that notifies events
+    public class ExampleService
+    {
+        private readonly IEventService _eventService;
+
+        public WeatherForecastController(IEventService eventService)
+        {
+            _eventService = eventService;
+        }
+
+        public async Task CreateExampleAsync(string name, CancellationToken cancellationToken = default)
+        {
+            // call repository to register the example name
+
+            // then notify your event to RabbitMQ
+            await _eventService.NotifyAsync(new ExampleCreated() { ExampleName = name });
+        }
+    }
 ```
