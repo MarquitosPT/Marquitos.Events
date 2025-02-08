@@ -1,5 +1,6 @@
-using Marquitos.Events.Api.Consumers;
+﻿using Marquitos.Events.Api.Consumers;
 using Marquitos.Events.Api.Events;
+using Marquitos.Events.RabbitMQ.Endpoints;
 using Marquitos.Events.RabbitMQ.Extensions.Configuration;
 
 namespace Marquitos.Events.Api
@@ -49,6 +50,8 @@ namespace Marquitos.Events.Api
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapRabbitMQConsumerEndpoints();
 
             app.Run();
         }
