@@ -5,6 +5,6 @@
         /// <summary>
         /// The weather forecast just created
         /// </summary>
-        public WeatherForecast WeatherForecast { get; set; }
+        public WeatherForecast WeatherForecast { get; set; } = null!;
     }
 }

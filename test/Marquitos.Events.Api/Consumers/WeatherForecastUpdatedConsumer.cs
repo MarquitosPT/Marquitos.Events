@@ -5,9 +5,10 @@ namespace Marquitos.Events.Api.Consumers
 {
     public class WeatherForecastUpdatedConsumer : EventConsumer<WeatherForecastUpdated>
     {
-        public override Task HandleMessageAsync(WeatherForecastUpdated message, CancellationToken cancellationToken = default)
+        public override async Task HandleMessageAsync(WeatherForecastUpdated message, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            Console.WriteLine("Received an message!");
+            await Task.CompletedTask;
         }
     }
 }
