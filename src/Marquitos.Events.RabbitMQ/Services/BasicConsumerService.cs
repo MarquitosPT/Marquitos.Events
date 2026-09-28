@@ -34,7 +34,6 @@ namespace Marquitos.Events.RabbitMQ.Services
         private string consumerQueueName;
         private string managementQueueName;
         private string managementTopic;
-        private string queueName;
         private string exchangeName;
         private ICollection<string> topics = new List<string>();
         private JsonSerializerOptions serializeOptions;
@@ -78,8 +77,6 @@ namespace Marquitos.Events.RabbitMQ.Services
                     new TimeOnlyJsonConverter() 
                 }
             };
-
-            _logger.BeginScope("{BasicConsumer}", consumerName);
         }
 
         public bool IsEnabled { get; protected set; } = false;
@@ -88,7 +85,7 @@ namespace Marquitos.Events.RabbitMQ.Services
 
         public void SetQueueName(string name)
         {
-            queueName = name;
+            consumerQueueName = name;
         }
 
         public void AddTopic(string topic)
@@ -203,7 +200,7 @@ namespace Marquitos.Events.RabbitMQ.Services
                 try
                 {
                     consumerQueue = await _bus.Advanced.QueueDeclareAsync(
-                        queueName, c =>
+                        consumerQueueName, c =>
                         {
                             c.AsDurable(options.Durable);
                             c.AsAutoDelete(options.AutoDelete);

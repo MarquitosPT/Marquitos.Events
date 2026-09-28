@@ -80,8 +80,6 @@ namespace Marquitos.Events.RabbitMQ.Services
                     new TimeOnlyJsonConverter()
                 }
             };
-
-            _logger.BeginScope("{EventConsumer}", consumerName);
         }
 
         public bool IsEnabled { get; protected set; } = false;

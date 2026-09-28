@@ -15,8 +15,6 @@ namespace Marquitos.Events.RabbitMQ.Services
         {
             _logger = logger;
             _services = services;
-
-            _logger.BeginScope("{Service}", nameof(RabbitConsumerService));
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
